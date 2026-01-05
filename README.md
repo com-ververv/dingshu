@@ -291,6 +291,7 @@ For detailed setup instructions, see [docs/updater.md](docs/updater.md).
 
 | App | Description |
 |-----|-------------|
+| [NitroInbox](https://www.nitroinbox.com) | Email client for devs using on-devise AI |
 | [StoryFlow](https://www.usestoryflow.com) | AI-powered book writing app |
 | [Model Faceoff](https://www.modelfaceoff.com) | Compare AI models side-by-side |
 | [MarkdownFlows](https://github.com/dotnetfactory/markdownflows) | Markdown editor with workflows |
