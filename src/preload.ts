@@ -10,11 +10,17 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 type ChatStreamEvent =
-  | { requestId: string; type: 'delta'; textDelta: string }
-  | { requestId: string; type: 'done'; finishReason?: string; usage?: unknown }
-  | { requestId: string; type: 'error'; error: { code: string; message: string; recoverable: boolean } }
+  | { conversationId?: string; requestId: string; type: 'delta'; textDelta: string }
+  | { conversationId?: string; requestId: string; type: 'done'; finishReason?: string; usage?: unknown }
+  | {
+      conversationId?: string;
+      requestId: string;
+      type: 'error';
+      error: { code: string; message: string; recoverable: boolean };
+    }
   | {
       requestId: string;
+      conversationId?: string;
       type: 'tool-call-start';
       toolCallId: string;
       toolName: string;
@@ -22,6 +28,7 @@ type ChatStreamEvent =
     }
   | {
       requestId: string;
+      conversationId?: string;
       type: 'tool-call-result';
       toolCallId: string;
       toolName: string;
@@ -32,6 +39,7 @@ type ChatStreamEvent =
     }
   | {
       requestId: string;
+      conversationId?: string;
       type: 'tool-call-confirmation-required';
       approvalId: string;
       toolCallId: string;
@@ -89,9 +97,18 @@ const appAPI = {
 
 // Chat API
 const chatAPI = {
+  listConversations: () => ipcRenderer.invoke('chat:listConversations'),
+  getConversation: (conversationId: string) => ipcRenderer.invoke('chat:getConversation', conversationId),
+  deleteConversation: (conversationId: string) => ipcRenderer.invoke('chat:deleteConversation', conversationId),
   send: (request: {
+    assistantMessageId?: string;
+    conversationId?: string;
     requestId: string;
     messages: { role: 'user' | 'assistant' | 'system'; content: string }[];
+    userMessage?: {
+      id: string;
+      content: string;
+    };
   }) => ipcRenderer.invoke('chat:send', request),
   stop: (requestId: string) => ipcRenderer.invoke('chat:stop', requestId),
   approveToolCall: (approvalId: string) => ipcRenderer.invoke('chat:approveToolCall', approvalId),

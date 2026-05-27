@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { initializeDatabase } from './schema';
 import { getDatabasePath, ensureDatabaseDirectory } from './config';
+import { runDatabaseMigrations } from './migrationRunner';
 
 let dbInstance: Database.Database | null = null;
 let currentDbPath: string | null = null;
@@ -15,9 +16,11 @@ export function getDatabase(): Database.Database {
 
     // Enable WAL mode for better concurrent performance
     dbInstance.pragma('journal_mode = WAL');
+    dbInstance.pragma('foreign_keys = ON');
 
     // Initialize schema
     initializeDatabase(dbInstance);
+    runDatabaseMigrations(dbInstance);
 
     console.log(`Database initialized at: ${dbPath}`);
   }

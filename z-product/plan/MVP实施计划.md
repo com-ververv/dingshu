@@ -99,6 +99,13 @@
 - 删除会话后列表不再显示。
 - 重新生成不破坏历史数据。
 
+执行记录：
+
+- 已完成数据库迁移 runner、`conversations` / `messages` / `tool_calls` / `secure_settings` 表和索引。
+- 已完成聊天消息与工具事件落库、侧边栏会话列表、最近会话自动恢复、软删除会话。
+- 已通过 `npm run lint`、`npx tsc --noEmit`、`npm run package`。
+- 已通过应用启动后的 SQLite 表和迁移版本检查，确认迁移生效；已确认迁移 SQL 被打入 `app.asar`。
+
 ## 阶段 5：设置面板 MVP
 
 目标：

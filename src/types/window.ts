@@ -85,12 +85,14 @@ export interface ChatMessage {
 }
 
 export interface ChatDeltaEvent {
+  conversationId?: string;
   requestId: string;
   type: 'delta';
   textDelta: string;
 }
 
 export interface ChatDoneEvent {
+  conversationId?: string;
   requestId: string;
   type: 'done';
   finishReason?: string;
@@ -98,6 +100,7 @@ export interface ChatDoneEvent {
 }
 
 export interface ChatErrorEvent {
+  conversationId?: string;
   requestId: string;
   type: 'error';
   error: {
@@ -108,6 +111,7 @@ export interface ChatErrorEvent {
 }
 
 export interface ChatToolCallStartEvent {
+  conversationId?: string;
   requestId: string;
   type: 'tool-call-start';
   toolCallId: string;
@@ -116,6 +120,7 @@ export interface ChatToolCallStartEvent {
 }
 
 export interface ChatToolCallResultEvent {
+  conversationId?: string;
   requestId: string;
   type: 'tool-call-result';
   toolCallId: string;
@@ -127,6 +132,7 @@ export interface ChatToolCallResultEvent {
 }
 
 export interface ChatToolCallConfirmationRequiredEvent {
+  conversationId?: string;
   requestId: string;
   type: 'tool-call-confirmation-required';
   approvalId: string;
@@ -138,8 +144,58 @@ export interface ChatToolCallConfirmationRequiredEvent {
   targetPreview?: string;
 }
 
+export interface ChatStoredToolEvent {
+  action?: string;
+  approvalId?: string;
+  riskSummary?: string;
+  toolCallId: string;
+  toolName: string;
+  status: 'pending_confirmation' | 'running' | 'completed' | 'failed' | 'cancelled';
+  targetPreview?: string;
+  inputPreview: string;
+  outputPreview?: string;
+  errorMessage?: string;
+  elapsedMs?: number;
+}
+
+export interface ChatStoredMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  status: 'streaming' | 'completed' | 'cancelled' | 'failed';
+  error?: string;
+  toolEvents: ChatStoredToolEvent[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ChatConversationSummary {
+  id: string;
+  title: string;
+  lastMessageAt?: number;
+  lastMessagePreview?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ChatConversationDetail extends ChatConversationSummary {
+  messages: ChatStoredMessage[];
+}
+
 export interface ChatAPI {
-  send: (request: { requestId: string; messages: ChatMessage[] }) => Promise<IPCResponse<void>>;
+  listConversations: () => Promise<IPCResponse<ChatConversationSummary[]>>;
+  getConversation: (conversationId: string) => Promise<IPCResponse<ChatConversationDetail>>;
+  deleteConversation: (conversationId: string) => Promise<IPCResponse<void>>;
+  send: (request: {
+    assistantMessageId?: string;
+    conversationId?: string;
+    requestId: string;
+    messages: ChatMessage[];
+    userMessage?: {
+      id: string;
+      content: string;
+    };
+  }) => Promise<IPCResponse<{ conversationId: string; assistantMessageId: string }>>;
   stop: (requestId: string) => Promise<IPCResponse<void>>;
   approveToolCall: (approvalId: string) => Promise<IPCResponse<void>>;
   rejectToolCall: (approvalId: string, reason?: string) => Promise<IPCResponse<void>>;

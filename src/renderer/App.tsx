@@ -7,6 +7,7 @@ import { Bot, CheckCircle2, Copy, RotateCcw, Search, Send, Settings, Square, Use
 import { Toaster, toast } from 'sonner';
 import { Streamdown } from 'streamdown';
 import { Settings as SettingsModal } from './components/Settings';
+import type { ChatConversationSummary } from '../types/window';
 
 type ChatMessage = {
   id: string;
@@ -150,6 +151,9 @@ function ToolEventList({
 export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [appVersion, setAppVersion] = useState<string>('');
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ChatConversationSummary[]>([]);
+  const [conversationsLoaded, setConversationsLoaded] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
@@ -164,6 +168,72 @@ export default function App() {
 
   const modelMessages = useMemo(() => getMessagesForModel(messages), [messages]);
 
+  async function refreshConversations(nextActiveId?: string) {
+    const result = await window.api.chat.listConversations();
+    if (!result.success) {
+      toast.error(result.error?.message ?? '加载会话列表失败');
+      setConversationsLoaded(true);
+      return;
+    }
+    setConversations(result.data ?? []);
+    if (nextActiveId !== undefined) {
+      setConversationId(nextActiveId);
+    }
+    setConversationsLoaded(true);
+  }
+
+  async function loadConversation(nextConversationId: string) {
+    if (isStreaming) {
+      toast.warning('请先停止当前生成');
+      return;
+    }
+    const result = await window.api.chat.getConversation(nextConversationId);
+    if (!result.success || !result.data) {
+      toast.error(result.error?.message ?? '加载会话失败');
+      return;
+    }
+    setConversationId(result.data.id);
+    setMessages(
+      result.data.messages.map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        status: message.status,
+        error: message.error,
+        toolEvents: message.toolEvents,
+      }))
+    );
+    setStatusText('Ready');
+  }
+
+  function startNewConversation() {
+    if (isStreaming) {
+      toast.warning('请先停止当前生成');
+      return;
+    }
+    setConversationId(null);
+    setMessages([]);
+    setInput('');
+    setStatusText('Ready');
+  }
+
+  async function deleteConversation(targetConversationId: string) {
+    if (isStreaming && targetConversationId === conversationId) {
+      toast.warning('请先停止当前生成');
+      return;
+    }
+    const result = await window.api.chat.deleteConversation(targetConversationId);
+    if (!result.success) {
+      toast.error(result.error?.message ?? '删除会话失败');
+      return;
+    }
+    if (targetConversationId === conversationId) {
+      setConversationId(null);
+      setMessages([]);
+    }
+    await refreshConversations(targetConversationId === conversationId ? undefined : conversationId ?? undefined);
+  }
+
   useEffect(() => {
     window.api.app.getVersion().then((result) => {
       if (result.success && result.data) {
@@ -171,6 +241,41 @@ export default function App() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (conversationsLoaded) {
+      return;
+    }
+    window.api.chat.listConversations().then((result) => {
+      if (!result.success) {
+        toast.error(result.error?.message ?? '加载会话列表失败');
+        setConversationsLoaded(true);
+        return;
+      }
+      const recentConversations = result.data ?? [];
+      setConversations(recentConversations);
+      setConversationsLoaded(true);
+      if (!conversationId && recentConversations[0]) {
+        window.api.chat.getConversation(recentConversations[0].id).then((conversationResult) => {
+          if (!conversationResult.success || !conversationResult.data) {
+            toast.error(conversationResult.error?.message ?? '加载最近会话失败');
+            return;
+          }
+          setConversationId(conversationResult.data.id);
+          setMessages(
+            conversationResult.data.messages.map((message) => ({
+              id: message.id,
+              role: message.role,
+              content: message.content,
+              status: message.status,
+              error: message.error,
+              toolEvents: message.toolEvents,
+            }))
+          );
+        });
+      }
+    });
+  }, [conversationsLoaded, conversationId]);
 
   useEffect(() => {
     window.api.app.onUpdateAvailable((version) => {
@@ -385,11 +490,20 @@ export default function App() {
     setStatusText('Connecting');
 
     const result = await window.api.chat.send({
+      assistantMessageId: assistantMessage.id,
+      conversationId: conversationId ?? undefined,
       requestId,
       messages: getMessagesForModel(nextMessages.filter((message) => message.id !== assistantMessage.id)),
+      userMessage: {
+        id: userMessage.id,
+        content: userMessage.content,
+      },
     });
 
-    if (!result.success) {
+    if (result.success && result.data) {
+      setConversationId(result.data.conversationId);
+      void refreshConversations(result.data.conversationId);
+    } else {
       setMessages((current) =>
         current.map((message) =>
           message.id === assistantMessage.id
@@ -489,6 +603,42 @@ export default function App() {
       </header>
 
       <main className="chat-shell">
+        <aside className="conversation-sidebar" aria-label="Conversation history">
+          <div className="conversation-sidebar-header">
+            <span>会话</span>
+            <button type="button" onClick={startNewConversation} disabled={isStreaming}>
+              新建
+            </button>
+          </div>
+          <div className="conversation-list">
+            {conversations.length === 0 ? (
+              <p className="conversation-empty">暂无历史会话</p>
+            ) : (
+              conversations.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className={`conversation-item ${conversation.id === conversationId ? 'is-active' : ''}`}
+                >
+                  <button type="button" onClick={() => void loadConversation(conversation.id)}>
+                    <span className="conversation-title">{conversation.title}</span>
+                    {conversation.lastMessagePreview ? (
+                      <span className="conversation-preview">{conversation.lastMessagePreview}</span>
+                    ) : null}
+                  </button>
+                  <button
+                    type="button"
+                    className="conversation-delete"
+                    onClick={() => void deleteConversation(conversation.id)}
+                    title="删除会话"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </aside>
+
         <section className="chat-thread" aria-label="Chat messages">
           {messages.length === 0 ? (
             <div className="chat-empty">

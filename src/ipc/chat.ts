@@ -3,17 +3,37 @@ import type { IpcMainInvokeEvent } from 'electron';
 import { resolveApproval } from '../main/ai/approval';
 import { streamChat, type ChatMessage } from '../main/ai/chatService';
 import type { ChatToolEvent } from '../main/ai/events';
+import {
+  ensureConversation,
+  getConversation,
+  insertChatMessage,
+  listConversations,
+  softDeleteConversation,
+  updateChatMessage,
+  upsertToolEvent,
+} from '../database/chatRepository';
 
 type ChatSendRequest = {
+  assistantMessageId?: string;
+  conversationId?: string;
   requestId: string;
   messages: ChatMessage[];
+  userMessage?: {
+    id: string;
+    content: string;
+  };
 };
 
 type ChatStreamEvent =
-  | { requestId: string; type: 'delta'; textDelta: string }
-  | { requestId: string; type: 'done'; finishReason?: string; usage?: unknown }
-  | { requestId: string; type: 'error'; error: { code: string; message: string; recoverable: boolean } }
-  | ChatToolEvent;
+  | { conversationId?: string; requestId: string; type: 'delta'; textDelta: string }
+  | { conversationId?: string; requestId: string; type: 'done'; finishReason?: string; usage?: unknown }
+  | {
+      conversationId?: string;
+      requestId: string;
+      type: 'error';
+      error: { code: string; message: string; recoverable: boolean };
+    }
+  | (ChatToolEvent & { conversationId?: string });
 
 const activeControllers = new Map<string, AbortController>();
 
@@ -69,21 +89,48 @@ async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendReques
   const window = BrowserWindow.fromWebContents(event.sender);
   const controller = new AbortController();
   activeControllers.set(request.requestId, controller);
+  const lastUserContent = request.userMessage?.content ?? [...request.messages].reverse().find((message) => message.role === 'user')?.content ?? '';
+  const conversation = ensureConversation(request.conversationId, lastUserContent);
+  const assistantMessageId = request.assistantMessageId ?? `${request.requestId}_assistant`;
+
+  if (request.userMessage) {
+    insertChatMessage({
+      id: request.userMessage.id,
+      conversationId: conversation.id,
+      role: 'user',
+      content: request.userMessage.content,
+      status: 'completed',
+    });
+  }
+
+  insertChatMessage({
+    id: assistantMessageId,
+    conversationId: conversation.id,
+    role: 'assistant',
+    content: '',
+    status: 'streaming',
+  });
 
   void (async () => {
+    let assistantContent = '';
     try {
       const result = streamChat({
         apiKey,
         abortSignal: controller.signal,
         messages: request.messages,
         requestId: request.requestId,
-        emitToolEvent: (toolEvent) => sendChatEvent(window, toolEvent),
+        emitToolEvent: (toolEvent) => {
+          upsertToolEvent(conversation.id, assistantMessageId, toolEvent);
+          sendChatEvent(window, { ...toolEvent, conversationId: conversation.id });
+        },
       });
 
       let deltaCount = 0;
       for await (const textDelta of result.textStream) {
         deltaCount += 1;
+        assistantContent += textDelta;
         sendChatEvent(window, {
+          conversationId: conversation.id,
           requestId: request.requestId,
           type: 'delta',
           textDelta,
@@ -91,8 +138,15 @@ async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendReques
       }
 
       const [finishReason, usage] = await Promise.all([result.finishReason, result.usage]);
+      updateChatMessage({
+        id: assistantMessageId,
+        conversationId: conversation.id,
+        content: assistantContent,
+        status: 'completed',
+      });
       console.log(`[Chat] done request=${request.requestId} deltas=${deltaCount} finishReason=${finishReason}`);
       sendChatEvent(window, {
+        conversationId: conversation.id,
         requestId: request.requestId,
         type: 'done',
         finishReason,
@@ -100,17 +154,26 @@ async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendReques
       });
     } catch (error) {
       console.error(`[Chat] error request=${request.requestId}`, error);
+      const recoverableError = getRecoverableError(error);
+      updateChatMessage({
+        id: assistantMessageId,
+        conversationId: conversation.id,
+        content: assistantContent,
+        status: recoverableError.code === 'chat.aborted' ? 'cancelled' : 'failed',
+        error: recoverableError.message,
+      });
       sendChatEvent(window, {
+        conversationId: conversation.id,
         requestId: request.requestId,
         type: 'error',
-        error: getRecoverableError(error),
+        error: recoverableError,
       });
     } finally {
       activeControllers.delete(request.requestId);
     }
   })();
 
-  return { success: true };
+  return { success: true, data: { conversationId: conversation.id, assistantMessageId } };
 }
 
 function handleChatStop(_: IpcMainInvokeEvent, requestId: string) {
@@ -159,6 +222,35 @@ function handleRejectToolCall(_: IpcMainInvokeEvent, approvalId: string, reason?
 }
 
 export function registerChatIPCHandlers(): void {
+  ipcMain.handle('chat:listConversations', () => {
+    try {
+      return { success: true, data: listConversations() };
+    } catch (error) {
+      return { success: false, error: { code: 'LIST_CONVERSATIONS_ERROR', message: String(error) } };
+    }
+  });
+  ipcMain.handle('chat:getConversation', (_, conversationId: string) => {
+    try {
+      const conversation = getConversation(conversationId);
+      if (!conversation) {
+        return { success: false, error: { code: 'CONVERSATION_NOT_FOUND', message: '没有找到会话。' } };
+      }
+      return { success: true, data: conversation };
+    } catch (error) {
+      return { success: false, error: { code: 'GET_CONVERSATION_ERROR', message: String(error) } };
+    }
+  });
+  ipcMain.handle('chat:deleteConversation', (_, conversationId: string) => {
+    try {
+      const deleted = softDeleteConversation(conversationId);
+      if (!deleted) {
+        return { success: false, error: { code: 'CONVERSATION_NOT_FOUND', message: '没有找到会话。' } };
+      }
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: { code: 'DELETE_CONVERSATION_ERROR', message: String(error) } };
+    }
+  });
   ipcMain.handle('chat:send', handleChatSend);
   ipcMain.handle('chat:stop', handleChatStop);
   ipcMain.handle('chat:approveToolCall', handleApproveToolCall);

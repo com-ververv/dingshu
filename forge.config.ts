@@ -79,6 +79,13 @@ const config: ForgeConfig = {
         }
       }
 
+      const migrationsSrc = path.resolve(__dirname, 'src', 'database', 'migrations');
+      const migrationsDest = path.join(buildPath, 'src', 'database', 'migrations');
+      if (fs.existsSync(migrationsSrc)) {
+        console.log('Copying database migrations');
+        copyDirSync(migrationsSrc, migrationsDest);
+      }
+
       // Generate app-update.yml with embedded token for electron-updater
       // IMPORTANT: This must be done BEFORE code signing (in packageAfterCopy, not postPackage)
       // Adding files after signing invalidates the code signature!
