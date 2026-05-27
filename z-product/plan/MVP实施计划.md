@@ -233,3 +233,18 @@
 - `npm run make` 成功。
 - 打包产物中聊天、文档创建、文档搜索、消息查询可用。
 - 已知风险记录在发布说明中。
+
+执行记录：
+
+- 已通过 `npm run lint`、`npx tsc --noEmit`、`npm run smoke:siliconflow -- generate`。
+- 已通过 `npm run make`，生成 `out/make/DesktopStarterApp-1.0.3-arm64.dmg`、`out/make/zip/darwin/arm64/DesktopStarterApp-darwin-arm64-1.0.3.zip` 和 `latest-mac.yml`。
+- 已验证 make/package 产物中的 `Contents/Resources/lark-cli/bin/lark-cli --version = 1.0.42`，可执行权限正常。
+- 已验证飞书只读链路：`lark-cli docs +search`、`lark-cli im +messages-search` 均返回 `ok = true`。
+- 已在阶段 2、3、6、7 分别完成真实文档创建、文档读取、消息查询、消息发送验收。
+
+发布风险 / 当前环境未覆盖项：
+
+- 当前只在 macOS Apple Silicon 上完成 package/make 验证；macOS Intel、Windows 10/11 需要目标机器或 CI runner 补测。
+- 当前未配置 Apple Developer ID 签名、公证环境变量，因此 DMG/ZIP 为未签名本地验证产物；正式发布前必须补签名、公证、Gatekeeper 验证。
+- Windows Squirrel installer、代码签名、SmartScreen、升级/卸载流程未在当前环境验证。
+- 隔离 lark-cli profile 的完整首次授权流程已接入设置页，但当前真实工具验收仍复用了本机既有授权状态；干净机器需要按设置页完成 appId/appSecret 和用户授权后再验收。
