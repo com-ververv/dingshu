@@ -20,6 +20,7 @@ import {
 import { completeLarkUserAuth, configureLarkApp, getLarkAuthStatus, startLarkUserAuth } from '../main/lark/auth';
 import { verifyBundledLarkCli } from '../main/lark/cli';
 import { listLarkCapabilities } from '../main/lark/capabilities';
+import { searchLarkObjects, type LarkObjectSearchRequest } from '../main/lark/objectSearch';
 
 /**
  * Register all IPC handlers
@@ -170,6 +171,14 @@ export function registerIPCHandlers(): void {
       };
     } catch (error) {
       return { success: false, error: { code: 'LARK_CAPABILITIES_ERROR', message: String(error) } };
+    }
+  });
+
+  ipcMain.handle('larkObject:search', async (_, request: LarkObjectSearchRequest) => {
+    try {
+      return { success: true, data: await searchLarkObjects(request) };
+    } catch (error) {
+      return { success: false, error: { code: 'LARK_OBJECT_SEARCH_ERROR', message: String(error) } };
     }
   });
 

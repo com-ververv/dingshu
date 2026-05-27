@@ -265,6 +265,33 @@ export function softDeleteConversation(conversationId: string): boolean {
   return result.changes > 0;
 }
 
+export function renameConversation(conversationId: string, title: string): ConversationSummary | null {
+  const normalizedTitle = title.replace(/\s+/g, ' ').trim().slice(0, 80);
+  if (!normalizedTitle) {
+    return null;
+  }
+
+  const now = Date.now();
+  const db = getDatabase();
+  const result = db
+    .prepare('UPDATE conversations SET title = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL')
+    .run(normalizedTitle, now, conversationId);
+  if (result.changes === 0) {
+    return null;
+  }
+
+  const row = db
+    .prepare(
+      `
+        SELECT id, title, last_message_at, last_message_preview, created_at, updated_at
+        FROM conversations
+        WHERE id = ? AND deleted_at IS NULL
+      `
+    )
+    .get(conversationId) as ConversationRow | undefined;
+  return row ? toConversationSummary(row) : null;
+}
+
 export function insertChatMessage(input: {
   id: string;
   conversationId: string;

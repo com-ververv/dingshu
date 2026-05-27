@@ -78,6 +78,25 @@ export interface LarkCliAPI {
   listCapabilities: () => Promise<IPCResponse<LarkCapabilityInfo[]>>;
 }
 
+export type LarkObjectType = 'chat' | 'contact' | 'document';
+
+export interface LarkObjectSearchResult {
+  id: string;
+  reference: string;
+  subtitle?: string;
+  title: string;
+  type: LarkObjectType;
+  url?: string;
+}
+
+export interface LarkObjectAPI {
+  search: (request: {
+    limit?: number;
+    query: string;
+    types?: LarkObjectType[];
+  }) => Promise<IPCResponse<LarkObjectSearchResult[]>>;
+}
+
 /**
  * Dialog API for native dialogs
  */
@@ -239,6 +258,7 @@ export interface ChatAPI {
   listConversations: () => Promise<IPCResponse<ChatConversationSummary[]>>;
   getConversation: (conversationId: string) => Promise<IPCResponse<ChatConversationDetail>>;
   deleteConversation: (conversationId: string) => Promise<IPCResponse<void>>;
+  renameConversation: (conversationId: string, title: string) => Promise<IPCResponse<ChatConversationSummary>>;
   send: (request: {
     assistantMessageId?: string;
     conversationId?: string;
@@ -269,6 +289,7 @@ export interface WindowAPI {
   secureSettings: SecureSettingsAPI;
   larkAuth: LarkAuthAPI;
   larkCli: LarkCliAPI;
+  larkObject: LarkObjectAPI;
   dialog: DialogAPI;
   shell: ShellAPI;
   database: DatabaseAPI;

@@ -8,6 +8,12 @@ import {
   Bot,
   CheckCircle2,
   Copy,
+  Edit3,
+  ExternalLink,
+  FileText,
+  MessageSquare,
+  PanelRightClose,
+  PanelRightOpen,
   RotateCcw,
   Search,
   Send,
@@ -19,7 +25,7 @@ import {
 import { Toaster, toast } from 'sonner';
 import { Streamdown } from 'streamdown';
 import { Settings as SettingsModal } from './components/Settings';
-import type { ChatConversationSummary, SecureSettingsStatus } from '../types/window';
+import type { ChatConversationSummary, LarkObjectSearchResult, LarkObjectType, SecureSettingsStatus } from '../types/window';
 
 type ChatMessage = {
   id: string;
@@ -44,6 +50,22 @@ type ToolEvent = {
   elapsedMs?: number;
 };
 
+type Artifact = {
+  contentPreview?: string;
+  errorMessage?: string;
+  id: string;
+  status: 'draft' | 'creating' | 'created' | 'failed' | 'cancelled';
+  title: string;
+  token?: string;
+  url?: string;
+};
+
+type MentionQuery = {
+  end: number;
+  query: string;
+  start: number;
+};
+
 const suggestedPrompts = [
   '把这段内容创建为飞书文档',
   '总结一下「研发群」今天的讨论',
@@ -52,6 +74,12 @@ const suggestedPrompts = [
 ];
 
 const DRAFT_PREFIX = 'pexar-lark-agent:draft:';
+
+const LARK_OBJECT_TYPE_LABELS: Record<LarkObjectType, string> = {
+  chat: '群',
+  contact: '联系人',
+  document: '文档',
+};
 
 function createId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -188,6 +216,94 @@ function getDraftKey(conversationId: string | null): string {
   return `${DRAFT_PREFIX}${conversationId ?? 'new'}`;
 }
 
+function parsePreviewJson(value?: string): Record<string, unknown> {
+  if (!value) {
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function getString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function deriveArtifacts(messages: ChatMessage[]): Artifact[] {
+  const artifacts = new Map<string, Artifact>();
+  for (const message of messages) {
+    for (const event of message.toolEvents ?? []) {
+      if (event.toolName !== 'lark_doc_create') {
+        continue;
+      }
+      const input = parsePreviewJson(event.inputPreview);
+      const output = parsePreviewJson(event.outputPreview);
+      const existing = artifacts.get(event.toolCallId);
+      const title = getString(output.title) ?? getString(input.title) ?? existing?.title ?? '未命名文档';
+      const contentPreview = getString(input.contentPreview) ?? existing?.contentPreview;
+      const url = getString(output.url) ?? existing?.url;
+      const token = getString(output.token) ?? existing?.token;
+      const status: Artifact['status'] =
+        event.status === 'completed' && url
+          ? 'created'
+          : event.status === 'completed'
+            ? 'creating'
+            : event.status === 'pending_confirmation'
+              ? 'draft'
+              : event.status === 'running'
+                ? 'creating'
+                : event.status === 'cancelled'
+                  ? 'cancelled'
+                  : event.status === 'failed'
+                    ? 'failed'
+                    : 'draft';
+      artifacts.set(event.toolCallId, {
+        contentPreview,
+        errorMessage: event.errorMessage,
+        id: event.toolCallId,
+        status,
+        title,
+        token,
+        url,
+      });
+    }
+  }
+  return [...artifacts.values()].reverse();
+}
+
+function findMentionQuery(value: string, cursor: number): MentionQuery | null {
+  const beforeCursor = value.slice(0, cursor);
+  const match = /(^|\s)@([^\s@（）()，,。]*)$/.exec(beforeCursor);
+  if (!match) {
+    return null;
+  }
+  const query = match[2] ?? '';
+  return {
+    end: cursor,
+    query,
+    start: beforeCursor.length - query.length - 1,
+  };
+}
+
+function getArtifactStatusLabel(status: Artifact['status']): string {
+  if (status === 'created') {
+    return '已创建';
+  }
+  if (status === 'creating') {
+    return '创建中';
+  }
+  if (status === 'failed') {
+    return '失败';
+  }
+  if (status === 'cancelled') {
+    return '未创建';
+  }
+  return '待确认';
+}
+
 function ToolEventList({
   events,
   onApprove,
@@ -278,6 +394,152 @@ function ToolEventList({
   );
 }
 
+function ArtifactPanel({
+  artifacts,
+  collapsed,
+  onCopy,
+  onOpen,
+  onToggle,
+}: {
+  artifacts: Artifact[];
+  collapsed: boolean;
+  onCopy: (content: string, label: string) => void;
+  onOpen: (url: string) => void;
+  onToggle: () => void;
+}) {
+  if (collapsed) {
+    return (
+      <aside className="artifact-rail" aria-label="Artifact panel collapsed">
+        <button type="button" onClick={onToggle} title="展开预览">
+          <PanelRightOpen size={16} />
+        </button>
+      </aside>
+    );
+  }
+
+  const activeArtifact = artifacts[0];
+
+  return (
+    <aside className="artifact-panel" aria-label="Document artifact preview">
+      <div className="artifact-header">
+        <div>
+          <span className="artifact-eyebrow">Artifact</span>
+          <h2>文档预览</h2>
+        </div>
+        <button type="button" onClick={onToggle} title="收起预览">
+          <PanelRightClose size={16} />
+        </button>
+      </div>
+
+      {!activeArtifact ? (
+        <div className="artifact-empty">
+          <FileText size={22} />
+          <p>创建飞书文档时，这里会显示待确认内容和创建结果。</p>
+        </div>
+      ) : (
+        <div className="artifact-stack">
+          {artifacts.map((artifact) => (
+            <section key={artifact.id} className={`artifact-card is-${artifact.status}`}>
+              <div className="artifact-card-header">
+                <FileText size={16} />
+                <div>
+                  <h3>{artifact.title}</h3>
+                  <span>{getArtifactStatusLabel(artifact.status)}</span>
+                </div>
+              </div>
+              {artifact.contentPreview ? (
+                <div className="artifact-preview">
+                  <Streamdown className="markdown-content" mode="streaming" controls={false}>
+                    {artifact.contentPreview}
+                  </Streamdown>
+                </div>
+              ) : (
+                <p className="artifact-muted">暂无正文预览</p>
+              )}
+              {artifact.errorMessage ? <p className="artifact-error">{artifact.errorMessage}</p> : null}
+              <div className="artifact-actions">
+                {artifact.contentPreview ? (
+                  <button type="button" onClick={() => onCopy(artifact.contentPreview!, '正文已复制')}>
+                    <Copy size={14} />
+                    <span>正文</span>
+                  </button>
+                ) : null}
+                {artifact.url ? (
+                  <>
+                    <button type="button" onClick={() => onCopy(artifact.url!, '链接已复制')}>
+                      <Copy size={14} />
+                      <span>链接</span>
+                    </button>
+                    <button type="button" onClick={() => onOpen(artifact.url!)}>
+                      <ExternalLink size={14} />
+                      <span>打开</span>
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function MentionPicker({
+  error,
+  loading,
+  onSelect,
+  query,
+  results,
+}: {
+  error?: string;
+  loading: boolean;
+  onSelect: (item: LarkObjectSearchResult) => void;
+  query: string;
+  results: LarkObjectSearchResult[];
+}) {
+  const grouped = new Map<LarkObjectType, LarkObjectSearchResult[]>();
+  for (const result of results) {
+    grouped.set(result.type, [...(grouped.get(result.type) ?? []), result]);
+  }
+
+  return (
+    <div className="mention-picker">
+      <div className="mention-picker-header">
+        <Search size={13} />
+        <span>{query ? `搜索「${query}」` : '输入名称搜索飞书对象'}</span>
+      </div>
+      {loading ? <p className="mention-picker-state">正在搜索...</p> : null}
+      {!loading && error ? <p className="mention-picker-state is-error">{error}</p> : null}
+      {!loading && !error && results.length === 0 ? <p className="mention-picker-state">没有匹配结果</p> : null}
+      {!loading && !error
+        ? (['chat', 'contact', 'document'] as LarkObjectType[]).map((type) => {
+            const items = grouped.get(type) ?? [];
+            if (items.length === 0) {
+              return null;
+            }
+            return (
+              <section key={type} className="mention-picker-group">
+                <h4>{LARK_OBJECT_TYPE_LABELS[type]}</h4>
+                {items.map((item) => (
+                  <button key={`${item.type}:${item.id}`} type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => onSelect(item)}>
+                    <span className="mention-icon">
+                      {item.type === 'chat' ? <MessageSquare size={14} /> : item.type === 'document' ? <FileText size={14} /> : <UserRound size={14} />}
+                    </span>
+                    <span className="mention-main">
+                      <strong>{item.title}</strong>
+                      {item.subtitle ? <small>{item.subtitle}</small> : null}
+                    </span>
+                  </button>
+                ))}
+              </section>
+            );
+          })
+        : null}
+    </div>
+  );
+}
+
 export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [appVersion, setAppVersion] = useState<string>('');
@@ -290,11 +552,19 @@ export default function App() {
   const [input, setInput] = useState('');
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState('Ready');
+  const [artifactCollapsed, setArtifactCollapsed] = useState(false);
+  const [renamingConversationId, setRenamingConversationId] = useState<string | null>(null);
+  const [renamingTitle, setRenamingTitle] = useState('');
+  const [mentionQuery, setMentionQuery] = useState<MentionQuery | null>(null);
+  const [mentionResults, setMentionResults] = useState<LarkObjectSearchResult[]>([]);
+  const [mentionLoading, setMentionLoading] = useState(false);
+  const [mentionError, setMentionError] = useState<string | undefined>();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const conversationSearchRef = useRef<HTMLInputElement | null>(null);
   const activeRequestIdRef = useRef<string | null>(null);
   const streamingMessageIdRef = useRef<string | null>(null);
+  const mentionRequestRef = useRef(0);
 
   const isStreaming = activeRequestId !== null;
   const canSend = input.trim().length > 0 && !isStreaming && secureStatus?.siliconflowApiKeyConfigured !== false;
@@ -320,6 +590,7 @@ export default function App() {
   const hasPendingApproval = messages.some((message) =>
     message.toolEvents?.some((event) => event.status === 'pending_confirmation')
   );
+  const artifacts = useMemo(() => deriveArtifacts(messages), [messages]);
 
   async function refreshConversations(nextActiveId?: string) {
     const result = await window.api.chat.listConversations();
@@ -387,6 +658,45 @@ export default function App() {
       setInput(localStorage.getItem(getDraftKey(null)) ?? '');
     }
     await refreshConversations(targetConversationId === conversationId ? undefined : conversationId ?? undefined);
+  }
+
+  function beginRenameConversation(conversation: ChatConversationSummary) {
+    setRenamingConversationId(conversation.id);
+    setRenamingTitle(conversation.title);
+  }
+
+  function cancelRenameConversation() {
+    setRenamingConversationId(null);
+    setRenamingTitle('');
+  }
+
+  async function saveConversationRename(targetConversationId: string) {
+    const title = renamingTitle.trim();
+    if (!title) {
+      toast.error('会话名称不能为空');
+      return;
+    }
+    const result = await window.api.chat.renameConversation(targetConversationId, title);
+    if (!result.success || !result.data) {
+      toast.error(result.error?.message ?? '重命名失败');
+      return;
+    }
+    setConversations((current) =>
+      current.map((conversation) => (conversation.id === targetConversationId ? result.data! : conversation))
+    );
+    cancelRenameConversation();
+    await refreshConversations(conversationId ?? undefined);
+  }
+
+  function handleRenameKeyDown(event: KeyboardEvent<HTMLInputElement>, targetConversationId: string) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void saveConversationRename(targetConversationId);
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelRenameConversation();
+    }
   }
 
   useEffect(() => {
@@ -638,6 +948,47 @@ export default function App() {
     localStorage.setItem(getDraftKey(conversationId), input);
   }, [conversationId, input]);
 
+  useEffect(() => {
+    if (!mentionQuery) {
+      return;
+    }
+    if (!mentionQuery.query.trim()) {
+      return;
+    }
+
+    const requestId = mentionRequestRef.current + 1;
+    mentionRequestRef.current = requestId;
+    const timer = window.setTimeout(() => {
+      window.api.larkObject
+        .search({ query: mentionQuery.query, limit: 4 })
+        .then((result) => {
+          if (mentionRequestRef.current !== requestId) {
+            return;
+          }
+          if (!result.success) {
+            setMentionError(result.error?.message ?? '搜索飞书对象失败');
+            setMentionResults([]);
+            return;
+          }
+          setMentionResults(result.data ?? []);
+        })
+        .catch((error: unknown) => {
+          if (mentionRequestRef.current !== requestId) {
+            return;
+          }
+          setMentionError(error instanceof Error ? error.message : String(error));
+          setMentionResults([]);
+        })
+        .finally(() => {
+          if (mentionRequestRef.current === requestId) {
+            setMentionLoading(false);
+          }
+        });
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [mentionQuery]);
+
   function runSlashCommand(command: string): boolean {
     const [name, ...rest] = command.trim().split(/\s+/);
     const argument = rest.join(' ').trim();
@@ -763,6 +1114,44 @@ export default function App() {
       event.preventDefault();
       void sendMessage(input);
     }
+    if (event.key === 'Escape' && mentionQuery) {
+      event.preventDefault();
+      setMentionQuery(null);
+    }
+  }
+
+  function handleInputChange(value: string, cursor: number) {
+    const nextQuery = findMentionQuery(value, cursor);
+    setInput(value);
+    setMentionQuery(nextQuery);
+    if (nextQuery?.query.trim()) {
+      setMentionLoading(true);
+      setMentionError(undefined);
+    } else {
+      setMentionResults([]);
+      setMentionLoading(false);
+      setMentionError(undefined);
+    }
+  }
+
+  function insertMention(item: LarkObjectSearchResult) {
+    const query = mentionQuery;
+    if (!query) {
+      return;
+    }
+    const before = input.slice(0, query.start);
+    const after = input.slice(query.end);
+    const nextInput = `${before}${item.reference} ${after}`;
+    const nextCursor = before.length + item.reference.length + 1;
+    setInput(nextInput);
+    setMentionQuery(null);
+    setMentionResults([]);
+    setMentionLoading(false);
+    setMentionError(undefined);
+    window.setTimeout(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(nextCursor, nextCursor);
+    }, 0);
   }
 
   function retryLastUserMessage() {
@@ -774,7 +1163,16 @@ export default function App() {
 
   async function copyMessage(content: string) {
     await navigator.clipboard.writeText(content);
-    toast.success('Copied');
+    toast.success('已复制');
+  }
+
+  async function copyText(content: string, label: string) {
+    await navigator.clipboard.writeText(content);
+    toast.success(label);
+  }
+
+  function openExternal(url: string) {
+    void window.api.shell.openExternal(url);
   }
 
   async function approveToolCall(approvalId: string) {
@@ -860,14 +1258,35 @@ export default function App() {
                       key={conversation.id}
                       className={`conversation-item ${conversation.id === conversationId ? 'is-active' : ''}`}
                     >
-                      <button type="button" onClick={() => void loadConversation(conversation.id)}>
-                        <span className="conversation-title">{conversation.title}</span>
-                        {conversation.lastMessagePreview ? (
-                          <span className="conversation-preview">{conversation.lastMessagePreview}</span>
-                        ) : null}
-                        <span className="conversation-time">
-                          {formatConversationTime(conversation.lastMessageAt ?? conversation.updatedAt)}
-                        </span>
+                      {renamingConversationId === conversation.id ? (
+                        <input
+                          className="conversation-rename-input"
+                          value={renamingTitle}
+                          autoFocus
+                          maxLength={80}
+                          onBlur={() => void saveConversationRename(conversation.id)}
+                          onChange={(event) => setRenamingTitle(event.target.value)}
+                          onKeyDown={(event) => handleRenameKeyDown(event, conversation.id)}
+                          aria-label="重命名会话"
+                        />
+                      ) : (
+                        <button type="button" onClick={() => void loadConversation(conversation.id)}>
+                          <span className="conversation-title">{conversation.title}</span>
+                          {conversation.lastMessagePreview ? (
+                            <span className="conversation-preview">{conversation.lastMessagePreview}</span>
+                          ) : null}
+                          <span className="conversation-time">
+                            {formatConversationTime(conversation.lastMessageAt ?? conversation.updatedAt)}
+                          </span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="conversation-rename"
+                        onClick={() => beginRenameConversation(conversation)}
+                        title="重命名会话"
+                      >
+                        <Edit3 size={13} />
                       </button>
                       <button
                         type="button"
@@ -961,15 +1380,27 @@ export default function App() {
         </section>
 
         <form className="chat-composer" onSubmit={handleSubmit}>
+          <div className="composer-input-wrap">
+            {mentionQuery ? (
+              <MentionPicker
+                error={mentionError}
+                loading={mentionLoading}
+                onSelect={insertMention}
+                query={mentionQuery.query}
+                results={mentionResults}
+              />
+            ) : null}
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => handleInputChange(event.target.value, event.currentTarget.selectionStart)}
+            onClick={(event) => setMentionQuery(findMentionQuery(input, event.currentTarget.selectionStart))}
             onKeyDown={handleKeyDown}
-            placeholder="输入消息，Enter 发送，Shift+Enter 换行"
+            placeholder="输入消息，@ 选择飞书对象，Enter 发送"
             rows={1}
             disabled={isStreaming}
           />
+          </div>
           <div className="composer-actions">
             <button
               type="button"
@@ -993,6 +1424,14 @@ export default function App() {
             )}
           </div>
         </form>
+
+        <ArtifactPanel
+          artifacts={artifacts}
+          collapsed={artifactCollapsed}
+          onCopy={(content, label) => void copyText(content, label)}
+          onOpen={openExternal}
+          onToggle={() => setArtifactCollapsed((current) => !current)}
+        />
       </main>
 
       <footer className="app-footer">Version {appVersion || '-'}</footer>

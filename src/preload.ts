@@ -75,6 +75,11 @@ const larkCliAPI = {
   listCapabilities: () => ipcRenderer.invoke('larkCli:listCapabilities'),
 };
 
+const larkObjectAPI = {
+  search: (request: { query: string; types?: ('chat' | 'contact' | 'document')[]; limit?: number }) =>
+    ipcRenderer.invoke('larkObject:search', request),
+};
+
 // Dialog API
 const dialogAPI = {
   showSaveDialog: (options?: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }) =>
@@ -118,6 +123,8 @@ const chatAPI = {
   listConversations: () => ipcRenderer.invoke('chat:listConversations'),
   getConversation: (conversationId: string) => ipcRenderer.invoke('chat:getConversation', conversationId),
   deleteConversation: (conversationId: string) => ipcRenderer.invoke('chat:deleteConversation', conversationId),
+  renameConversation: (conversationId: string, title: string) =>
+    ipcRenderer.invoke('chat:renameConversation', conversationId, title),
   send: (request: {
     assistantMessageId?: string;
     conversationId?: string;
@@ -167,6 +174,7 @@ contextBridge.exposeInMainWorld('api', {
   secureSettings: secureSettingsAPI,
   larkAuth: larkAuthAPI,
   larkCli: larkCliAPI,
+  larkObject: larkObjectAPI,
   dialog: dialogAPI,
   shell: shellAPI,
   database: databaseAPI,

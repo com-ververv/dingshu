@@ -8,6 +8,7 @@ import {
   getConversation,
   insertChatMessage,
   listConversations,
+  renameConversation,
   softDeleteConversation,
   updateChatMessage,
   upsertToolEvent,
@@ -250,6 +251,17 @@ export function registerChatIPCHandlers(): void {
       return { success: true };
     } catch (error) {
       return { success: false, error: { code: 'DELETE_CONVERSATION_ERROR', message: String(error) } };
+    }
+  });
+  ipcMain.handle('chat:renameConversation', (_, conversationId: string, title: string) => {
+    try {
+      const renamed = renameConversation(conversationId, title);
+      if (!renamed) {
+        return { success: false, error: { code: 'RENAME_CONVERSATION_ERROR', message: '会话不存在或标题为空。' } };
+      }
+      return { success: true, data: renamed };
+    } catch (error) {
+      return { success: false, error: { code: 'RENAME_CONVERSATION_ERROR', message: String(error) } };
     }
   });
   ipcMain.handle('chat:send', handleChatSend);

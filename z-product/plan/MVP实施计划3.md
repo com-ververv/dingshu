@@ -205,6 +205,15 @@
 - 右侧面板可收起，不影响聊天主流程。
 - `npm run lint`、`npx tsc --noEmit`、`npm run package` 通过。
 
+执行记录：
+
+- 已在聊天工作区右侧新增可收起 Artifact 面板。
+- 首版 Artifact 从 `lark_doc_create` 的 tool event 派生，不新增数据库表。
+- 审批前读取 `inputPreview` 中的 `title` 和 `contentPreview` 展示文档草稿。
+- 创建成功后读取 `outputPreview` 中的 `url` 和 `token`，支持复制正文、复制链接和打开飞书链接。
+- 拒绝或失败时 Artifact 展示未创建 / 失败状态，不展示成功链接。
+- 已按 CodePilot 的紧凑三栏工作台风格调整侧栏、消息区、输入区和右侧预览面板视觉。
+
 ## 8. 阶段 20：飞书对象 Picker
 
 目标：
@@ -236,6 +245,14 @@
 - 无搜索结果、无权限、授权失效时有明确提示。
 - `npm run lint`、`npx tsc --noEmit`、`npm run package` 通过。
 
+执行记录：
+
+- 已新增 `larkObject:search` 只读 IPC，Renderer 不直接执行 lark-cli。
+- Picker 支持搜索联系人、群聊和文档，结果统一为 `id`、`title`、`subtitle`、`reference`、`url`。
+- 输入框识别当前光标前的 `@关键词`，展示分组 picker。
+- 选中后插入稳定引用文本：`@[群:...](chat_id=...)`、`@[联系人:...](open_id=...)`、`@[文档:...](url=...)`。
+- 搜索失败、无权限或无结果会在 picker 中展示明确状态。
+
 ## 9. 阶段 21：会话重命名
 
 目标：
@@ -260,3 +277,12 @@
 - 搜索会话时能按新标题命中。
 - 删除、切换、生成中的会话状态不被重命名破坏。
 - `npm run lint`、`npx tsc --noEmit`、`npm run package` 通过。
+
+执行记录：
+
+- 已新增 `renameConversation` 数据库方法，只更新本地 `conversations.title`。
+- 已新增 `chat:renameConversation` IPC，并同步 preload 与 `window.api` 类型。
+- 侧栏会话项 hover 后显示重命名按钮。
+- 重命名支持 Enter 保存、Esc 取消、失焦保存。
+- 空标题会拒绝保存，标题最多保留 80 字符。
+- 重命名后刷新会话列表并保留当前选中会话，侧栏搜索可按新标题命中。
