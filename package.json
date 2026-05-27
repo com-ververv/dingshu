@@ -17,7 +17,8 @@
     "clean": "rm -rf out .webpack .vite",
     "version:patch": "npm version patch && git push --follow-tags",
     "version:minor": "npm version minor && git push --follow-tags",
-    "version:major": "npm version major && git push --follow-tags"
+    "version:major": "npm version major && git push --follow-tags",
+    "smoke:siliconflow": "node scripts/siliconflow-ai-sdk-smoke.mjs"
   },
   "keywords": [
     "electron",
@@ -72,9 +73,11 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.48",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-tabs": "^1.1.13",
+    "ai": "^6.0.191",
     "better-sqlite3": "^12.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -85,6 +88,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.4.3"
   }
 }
