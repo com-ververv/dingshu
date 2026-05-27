@@ -46,7 +46,12 @@ export function getSecureSetting(key: SecureSettingKey): string | null {
     return null;
   }
 
-  return safeStorage.decryptString(row.encrypted_value);
+  try {
+    return safeStorage.decryptString(row.encrypted_value);
+  } catch (error) {
+    console.warn(`[SecureSettings] Failed to decrypt setting ${key}. The value may need to be saved again.`, error);
+    return null;
+  }
 }
 
 export function hasSecureSetting(key: SecureSettingKey): boolean {

@@ -1050,16 +1050,27 @@ export default function App() {
     setActiveRequestId(requestId);
     setStatusText('正在连接');
 
-    const result = await window.api.chat.send({
-      assistantMessageId: assistantMessage.id,
-      conversationId: conversationId ?? undefined,
-      requestId,
-      messages: getMessagesForModel(nextMessages.filter((message) => message.id !== assistantMessage.id)),
-      userMessage: {
-        id: userMessage.id,
-        content: userMessage.content,
-      },
-    });
+    let result;
+    try {
+      result = await window.api.chat.send({
+        assistantMessageId: assistantMessage.id,
+        conversationId: conversationId ?? undefined,
+        requestId,
+        messages: getMessagesForModel(nextMessages.filter((message) => message.id !== assistantMessage.id)),
+        userMessage: {
+          id: userMessage.id,
+          content: userMessage.content,
+        },
+      });
+    } catch (error) {
+      result = {
+        success: false,
+        error: {
+          code: 'CHAT_SEND_IPC_ERROR',
+          message: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
 
     if (result.success && result.data) {
       setConversationId(result.data.conversationId);
@@ -1076,7 +1087,7 @@ export default function App() {
             : message
         )
       );
-      setStatusText('Failed');
+      setStatusText('失败');
       activeRequestIdRef.current = null;
       streamingMessageIdRef.current = null;
       setActiveRequestId(null);
