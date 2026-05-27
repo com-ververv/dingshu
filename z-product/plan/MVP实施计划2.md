@@ -171,6 +171,15 @@ MVP 不开放：
 - 至少真实创建 1 个安全测试资源：任务、草稿或文档评论三选一。
 - 错误路径不伪造成功。
 
+执行记录：
+
+- 已在 capability registry 中新增阶段 11 写能力：日程创建/更新/RSVP、任务创建/更新/完成/评论、文档更新、文档评论、表格追加/覆盖写入、邮件草稿/回复草稿/转发草稿。
+- 写能力统一声明 `risk = write`，执行前进入 `lark_cli_shortcut` 审批流程。
+- 邮件相关能力未开放 `--confirm-send`，只能创建草稿，不能由 Agent 直接发送邮件。
+- 已新增单测覆盖写能力 allowlist、`dry-run` flag 构造，以及邮件 `confirm-send` 越权 flag 拒绝。
+- 已通过 `npm run test -- --run src/main/ai/tools/larkCliShortcut.test.ts`、`npm run lint`、`npx tsc --noEmit`。
+- 已真实创建测试任务成功：`Codex Stage11 Test Task 2026-05-27T17-15-06-232Z`，返回 `guid = 8cf64367-971b-484e-b544-bbf5cfe2aca1`。
+
 ## 5. 阶段 12：文件、表格和多维表格增强
 
 目标：

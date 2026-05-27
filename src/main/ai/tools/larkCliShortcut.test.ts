@@ -26,4 +26,24 @@ describe('lark_cli_shortcut', () => {
     expect(getLarkCapability('sheets_info')?.supportsFormat).toBe(false);
     expect(getLarkCapability('calendar_agenda')?.supportsFormat).not.toBe(false);
   });
+
+  it('keeps write capabilities behind explicit allowlists', () => {
+    const taskCreate = getLarkCapability('task_create');
+    expect(taskCreate?.risk).toBe('write');
+    expect(buildLarkShortcutFlagArgs({ summary: '测试任务', 'dry-run': true }, taskCreate?.allowedFlags ?? [])).toEqual([
+      '--summary',
+      '测试任务',
+      '--dry-run',
+    ]);
+  });
+
+  it('does not allow direct mail send flags in draft/reply/forward capabilities', () => {
+    const mailReply = getLarkCapability('mail_reply');
+    const mailForward = getLarkCapability('mail_forward');
+    expect(mailReply?.allowedFlags).not.toContain('confirm-send');
+    expect(mailForward?.allowedFlags).not.toContain('confirm-send');
+    expect(() => buildLarkShortcutFlagArgs({ 'confirm-send': true }, mailReply?.allowedFlags ?? [])).toThrow(
+      'capability does not allow flag --confirm-send'
+    );
+  });
 });
