@@ -126,6 +126,14 @@
 - 保存凭证后可正常聊天和调用飞书工具。
 - `safeStorage` 不可用时阻止保存。
 
+执行记录：
+
+- 已完成 `secure_settings + safeStorage` 凭证保存、配置状态 IPC 和设置面板 AI/Lark 配置页。
+- 聊天主进程已优先从本地加密设置读取 SiliconFlow API Key，`.env` 只保留为开发 fallback。
+- 已完成飞书 appId/appSecret 保存后初始化隔离 lark-cli profile；授权入口使用 `lark-cli auth login --no-wait --json` 设备码流程。
+- 已通过 `npm run lint`、`npx tsc --noEmit`、`npm run package`。
+- 已把本机 SiliconFlow API Key 写入本地 `secure_settings` 密文，并验证 safeStorage 解密匹配；应用可在不显式传入 `SILICONFLOW_API_KEY` 的情况下启动。
+
 ## 阶段 6：消息查询
 
 目标：
