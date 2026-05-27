@@ -204,6 +204,17 @@
 - 干净机器无需全局安装 lark-cli 即可执行飞书工具。
 - macOS / Windows 路径和权限验证通过。
 
+执行记录：
+
+- 已引入并锁定 `@larksuite/cli@1.0.42`，开发模式优先使用 `node_modules/@larksuite/cli/bin/lark-cli`，打包模式使用 `process.resourcesPath/lark-cli/bin/lark-cli`。
+- 已在 Forge `packageAfterCopy` 阶段复制 `bin/`、`scripts/`、`checksums.txt`、`package.json` 到 `Contents/Resources/lark-cli`，并确保 macOS 可执行权限。
+- 已新增 `larkCli:getInfo` IPC 和设置页展示，用于查看实际 executable、packageRoot 和 SHA-256。
+- 已配置本地 Electron zip 缓存路径，避免 package 过程反复依赖网络下载 Electron。
+- 已验证开发路径二进制可执行：`node_modules/@larksuite/cli/bin/lark-cli --version = 1.0.42`，文件类型为 macOS arm64 Mach-O。
+- 已验证 package 产物：`Contents/Resources/lark-cli/bin/lark-cli --version = 1.0.42`，可执行权限为 `755`，SHA-256 为 `1506064e6209fadd8c281784a0f8230dff50f43bdc0d1fa6164e987fb44d0484`。
+- 已通过 `npm run lint`、`npx tsc --noEmit`、`npm run package`；package app 可启动。
+- Windows 路径和权限受当前 macOS 环境限制未实机验证，纳入阶段 9 发布验证。
+
 ## 阶段 9：MVP 发布验证
 
 目标：

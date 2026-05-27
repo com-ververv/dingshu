@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { DatabaseInfo, SecureSettingsStatus, LarkAuthStartResult } from '../../types/window';
+import { DatabaseInfo, SecureSettingsStatus, LarkAuthStartResult, LarkCliInfo } from '../../types/window';
 
 interface SettingsProps {
   onClose: () => void;
@@ -27,6 +27,7 @@ export function Settings({ onClose }: SettingsProps) {
   const [credentialResult, setCredentialResult] = useState<{ success: boolean; message: string } | null>(null);
   const [authResult, setAuthResult] = useState<LarkAuthStartResult | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
+  const [larkCliInfo, setLarkCliInfo] = useState<LarkCliInfo | null>(null);
 
   // App version
   const [appVersion, setAppVersion] = useState<string>('...');
@@ -47,6 +48,7 @@ export function Settings({ onClose }: SettingsProps) {
       }
 
       await loadSecureStatus();
+      await loadLarkCliInfo();
     };
     loadSettings();
   }, []);
@@ -55,6 +57,13 @@ export function Settings({ onClose }: SettingsProps) {
     const statusResult = await window.api.secureSettings.getStatus();
     if (statusResult.success && statusResult.data) {
       setSecureStatus(statusResult.data);
+    }
+  };
+
+  const loadLarkCliInfo = async () => {
+    const result = await window.api.larkCli.getInfo();
+    if (result.success && result.data) {
+      setLarkCliInfo(result.data);
     }
   };
 
@@ -292,6 +301,22 @@ export function Settings({ onClose }: SettingsProps) {
                 {savingCredentials ? '保存中...' : '保存飞书凭证'}
               </button>
               <div className="auth-section">
+                <div className={`db-status ${larkCliInfo?.ok ? 'success' : 'warning'}`}>
+                  <span className="status-icon">{larkCliInfo?.ok ? 'OK' : '!'}</span>
+                  <span>{larkCliInfo?.ok ? 'lark-cli 可用' : 'lark-cli 不可用'}</span>
+                </div>
+                {larkCliInfo ? (
+                  <div className="cli-info">
+                    <label>Executable</label>
+                    <code>{larkCliInfo.executable}</code>
+                    {larkCliInfo.sha256 ? (
+                      <>
+                        <label>SHA-256</label>
+                        <code>{larkCliInfo.sha256}</code>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
                 <button className="btn-secondary" onClick={handleStartLarkAuth} disabled={authBusy}>
                   {authBusy ? '处理中...' : '开始飞书授权'}
                 </button>

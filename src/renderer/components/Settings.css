@@ -272,6 +272,16 @@
   gap: var(--space-sm);
 }
 
+.cli-info {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.cli-info label {
+  margin-bottom: 0;
+}
+
+.cli-info code,
 .auth-result code {
   display: block;
   padding: var(--space-sm);

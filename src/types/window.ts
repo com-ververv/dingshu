@@ -57,6 +57,18 @@ export interface LarkAuthAPI {
   complete: (deviceCode: string) => Promise<IPCResponse<void>>;
 }
 
+export interface LarkCliInfo {
+  ok: boolean;
+  executable: string;
+  packageRoot?: string;
+  sha256?: string;
+  error?: string;
+}
+
+export interface LarkCliAPI {
+  getInfo: () => Promise<IPCResponse<LarkCliInfo>>;
+}
+
 /**
  * Dialog API for native dialogs
  */
@@ -247,6 +259,7 @@ export interface WindowAPI {
   settings: SettingsAPI;
   secureSettings: SecureSettingsAPI;
   larkAuth: LarkAuthAPI;
+  larkCli: LarkCliAPI;
   dialog: DialogAPI;
   shell: ShellAPI;
   database: DatabaseAPI;

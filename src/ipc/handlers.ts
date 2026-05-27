@@ -18,6 +18,7 @@ import {
   setSecureSetting,
 } from '../database/secureSettingsRepository';
 import { completeLarkUserAuth, configureLarkApp, getLarkAuthStatus, startLarkUserAuth } from '../main/lark/auth';
+import { verifyBundledLarkCli } from '../main/lark/cli';
 
 /**
  * Register all IPC handlers
@@ -143,6 +144,14 @@ export function registerIPCHandlers(): void {
       return { success: true };
     } catch (error) {
       return { success: false, error: { code: 'LARK_AUTH_COMPLETE_ERROR', message: String(error) } };
+    }
+  });
+
+  ipcMain.handle('larkCli:getInfo', async () => {
+    try {
+      return { success: true, data: verifyBundledLarkCli() };
+    } catch (error) {
+      return { success: false, error: { code: 'LARK_CLI_INFO_ERROR', message: String(error) } };
     }
   });
 

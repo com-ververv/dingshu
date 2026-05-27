@@ -1,9 +1,10 @@
 import { spawn } from 'node:child_process';
 import { app } from 'electron';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const DEFAULT_LARK_CLI_BIN = process.env.LARK_CLI_BIN ?? 'lark-cli';
+const LARK_CLI_PACKAGE_PATH = path.join('node_modules', '@larksuite', 'cli');
 
 export type LarkCliResult = {
   exitCode: number | null;
@@ -20,11 +21,51 @@ export type LarkCliOptions = {
 };
 
 export function getLarkCliBin(): string {
-  return DEFAULT_LARK_CLI_BIN;
+  if (process.env.LARK_CLI_BIN) {
+    return process.env.LARK_CLI_BIN;
+  }
+
+  const executableName = process.platform === 'win32' ? 'lark-cli.exe' : 'lark-cli';
+  const bundledPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'lark-cli', 'bin', executableName)
+    : path.join(app.getAppPath(), LARK_CLI_PACKAGE_PATH, 'bin', executableName);
+
+  if (fs.existsSync(bundledPath)) {
+    return bundledPath;
+  }
+
+  return 'lark-cli';
+}
+
+export function getLarkCliPackageRoot(): string | null {
+  const executable = getLarkCliBin();
+  const binDir = path.dirname(executable);
+  const packageRoot = path.dirname(binDir);
+  return fs.existsSync(path.join(packageRoot, 'package.json')) ? packageRoot : null;
+}
+
+export function verifyBundledLarkCli(): { ok: boolean; executable: string; packageRoot?: string; sha256?: string; error?: string } {
+  const executable = getLarkCliBin();
+  if (!fs.existsSync(executable)) {
+    return {
+      ok: false,
+      executable,
+      error: 'lark-cli executable not found',
+    };
+  }
+
+  const packageRoot = getLarkCliPackageRoot();
+  const sha256 = crypto.createHash('sha256').update(fs.readFileSync(executable)).digest('hex');
+  return {
+    ok: true,
+    executable,
+    packageRoot: packageRoot ?? undefined,
+    sha256,
+  };
 }
 
 export function runLarkCli(args: string[], options: LarkCliOptions): Promise<LarkCliResult> {
-  const executable = options.executable ?? DEFAULT_LARK_CLI_BIN;
+  const executable = options.executable ?? getLarkCliBin();
   const larkHome = path.join(app.getPath('userData'), 'lark-cli-profile');
   const larkWorkdir = path.join(app.getPath('userData'), 'lark-cli-workdir');
   fs.mkdirSync(larkWorkdir, { recursive: true });

@@ -32,6 +32,65 @@ function copyDirSync(src: string, dest: string) {
   }
 }
 
+function copyLarkCliResources(nodeModulesSrc: string, resourcesPath: string) {
+  const packageSrc = path.join(nodeModulesSrc, '@larksuite', 'cli');
+  const packageDest = path.join(resourcesPath, 'lark-cli');
+  const entriesToCopy = ['bin', 'scripts', 'checksums.txt', 'package.json'];
+
+  if (!fs.existsSync(packageSrc)) {
+    throw new Error(`@larksuite/cli is not installed: ${packageSrc}`);
+  }
+
+  fs.rmSync(packageDest, { recursive: true, force: true });
+  fs.mkdirSync(packageDest, { recursive: true });
+  for (const entry of entriesToCopy) {
+    const src = path.join(packageSrc, entry);
+    const dest = path.join(packageDest, entry);
+    if (!fs.existsSync(src)) {
+      throw new Error(`Missing @larksuite/cli resource: ${src}`);
+    }
+    const stat = fs.statSync(src);
+    if (stat.isDirectory()) {
+      copyDirSync(src, dest);
+    } else {
+      fs.copyFileSync(src, dest);
+    }
+  }
+
+  const exe = process.platform === 'win32' ? 'lark-cli.exe' : 'lark-cli';
+  const executablePath = path.join(packageDest, 'bin', exe);
+  if (!fs.existsSync(executablePath)) {
+    throw new Error(`Bundled lark-cli executable not found: ${executablePath}`);
+  }
+  if (process.platform !== 'win32') {
+    fs.chmodSync(executablePath, 0o755);
+  }
+  console.log(`Copied lark-cli resources to ${packageDest}`);
+}
+
+function getLocalElectronZipDir(): string | undefined {
+  const electronVersion = JSON.parse(fs.readFileSync(path.join(__dirname, 'node_modules', 'electron', 'package.json'), 'utf8')).version;
+  const zipName = `electron-v${electronVersion}-${process.platform}-${process.arch}.zip`;
+  const cacheRoot = path.join(process.env.HOME ?? '', 'Library', 'Caches', 'electron');
+
+  if (!fs.existsSync(cacheRoot)) {
+    return undefined;
+  }
+
+  const cacheDirs = fs.readdirSync(cacheRoot);
+  for (const cacheDir of cacheDirs) {
+    const candidateDir = path.join(cacheRoot, cacheDir);
+    const candidateZip = path.join(candidateDir, zipName);
+    if (fs.existsSync(candidateZip)) {
+      return candidateDir;
+    }
+  }
+
+  return undefined;
+}
+
+const localElectronZipDir = getLocalElectronZipDir();
+
 const config: ForgeConfig = {
   packagerConfig: {
     name: appConfig.productName.replace(/\s+/g, ''), // Remove spaces for app name
@@ -39,6 +98,7 @@ const config: ForgeConfig = {
     icon: './assets/icon',
     appBundleId: appConfig.appBundleId,
     appCategoryType: appConfig.appCategory,
+    ...(localElectronZipDir ? { electronZipDir: localElectronZipDir } : {}),
     asar: {
       unpack: '**/*.{node,dylib}',
     },
@@ -86,9 +146,11 @@ const config: ForgeConfig = {
         copyDirSync(migrationsSrc, migrationsDest);
       }
 
-      // Generate app-update.yml with embedded token for electron-updater
-      // IMPORTANT: This must be done BEFORE code signing (in packageAfterCopy, not postPackage)
-      // Adding files after signing invalidates the code signature!
+      const resourcesPath = path.resolve(buildPath, '..');
+      copyLarkCliResources(nodeModulesSrc, resourcesPath);
+
+      // Generate app-update.yml with embedded token for electron-updater.
+      // IMPORTANT: This must be done BEFORE code signing.
       const ghToken = process.env.GH_TOKEN;
 
       let appUpdateYml = `provider: github
@@ -103,9 +165,6 @@ private: ${appConfig.github.private}
         console.log('Warning: GH_TOKEN not set - auto-updates will not work for private repo');
       }
 
-      // buildPath is the app's Contents/Resources/app directory
-      // We need to write to the parent Resources directory (outside asar)
-      const resourcesPath = path.resolve(buildPath, '..');
       const updateYmlDest = path.join(resourcesPath, 'app-update.yml');
       console.log(`Writing app-update.yml to ${resourcesPath}`);
       fs.writeFileSync(updateYmlDest, appUpdateYml);

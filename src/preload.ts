@@ -70,6 +70,10 @@ const larkAuthAPI = {
   complete: (deviceCode: string) => ipcRenderer.invoke('larkAuth:complete', deviceCode),
 };
 
+const larkCliAPI = {
+  getInfo: () => ipcRenderer.invoke('larkCli:getInfo'),
+};
+
 // Dialog API
 const dialogAPI = {
   showSaveDialog: (options?: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }) =>
@@ -161,6 +165,7 @@ contextBridge.exposeInMainWorld('api', {
   settings: settingsAPI,
   secureSettings: secureSettingsAPI,
   larkAuth: larkAuthAPI,
+  larkCli: larkCliAPI,
   dialog: dialogAPI,
   shell: shellAPI,
   database: databaseAPI,
