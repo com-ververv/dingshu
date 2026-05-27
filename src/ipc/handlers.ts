@@ -19,6 +19,7 @@ import {
 } from '../database/secureSettingsRepository';
 import { completeLarkUserAuth, configureLarkApp, getLarkAuthStatus, startLarkUserAuth } from '../main/lark/auth';
 import { verifyBundledLarkCli } from '../main/lark/cli';
+import { listLarkCapabilities } from '../main/lark/capabilities';
 
 /**
  * Register all IPC handlers
@@ -152,6 +153,23 @@ export function registerIPCHandlers(): void {
       return { success: true, data: verifyBundledLarkCli() };
     } catch (error) {
       return { success: false, error: { code: 'LARK_CLI_INFO_ERROR', message: String(error) } };
+    }
+  });
+
+  ipcMain.handle('larkCli:listCapabilities', async () => {
+    try {
+      return {
+        success: true,
+        data: listLarkCapabilities().map((capability) => ({
+          description: capability.description,
+          domain: capability.domain,
+          id: capability.id,
+          risk: capability.risk,
+          shortcut: capability.shortcut,
+        })),
+      };
+    } catch (error) {
+      return { success: false, error: { code: 'LARK_CAPABILITIES_ERROR', message: String(error) } };
     }
   });
 

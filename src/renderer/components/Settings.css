@@ -277,6 +277,31 @@
   gap: var(--space-xs);
 }
 
+.capability-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.capability-summary div {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.capability-summary strong {
+  font-size: var(--text-lg);
+  line-height: 1;
+}
+
+.capability-summary span {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
 .cli-info label {
   margin-bottom: 0;
 }

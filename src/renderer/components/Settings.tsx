@@ -6,7 +6,13 @@
 
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { DatabaseInfo, SecureSettingsStatus, LarkAuthStartResult, LarkCliInfo } from '../../types/window';
+import {
+  DatabaseInfo,
+  SecureSettingsStatus,
+  LarkAuthStartResult,
+  LarkCapabilityInfo,
+  LarkCliInfo,
+} from '../../types/window';
 
 interface SettingsProps {
   onClose: () => void;
@@ -28,6 +34,7 @@ export function Settings({ onClose }: SettingsProps) {
   const [authResult, setAuthResult] = useState<LarkAuthStartResult | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [larkCliInfo, setLarkCliInfo] = useState<LarkCliInfo | null>(null);
+  const [larkCapabilities, setLarkCapabilities] = useState<LarkCapabilityInfo[]>([]);
 
   // App version
   const [appVersion, setAppVersion] = useState<string>('...');
@@ -49,6 +56,7 @@ export function Settings({ onClose }: SettingsProps) {
 
       await loadSecureStatus();
       await loadLarkCliInfo();
+      await loadLarkCapabilities();
     };
     loadSettings();
   }, []);
@@ -65,6 +73,18 @@ export function Settings({ onClose }: SettingsProps) {
     if (result.success && result.data) {
       setLarkCliInfo(result.data);
     }
+  };
+
+  const loadLarkCapabilities = async () => {
+    const result = await window.api.larkCli.listCapabilities();
+    if (result.success && result.data) {
+      setLarkCapabilities(result.data);
+    }
+  };
+
+  const capabilitySummary = {
+    read: larkCapabilities.filter((capability) => capability.risk === 'read').length,
+    write: larkCapabilities.filter((capability) => capability.risk === 'write').length,
   };
 
   const handleSaveCredentials = async () => {
@@ -317,6 +337,20 @@ export function Settings({ onClose }: SettingsProps) {
                     ) : null}
                   </div>
                 ) : null}
+                <div className="capability-summary">
+                  <div>
+                    <strong>{larkCapabilities.length}</strong>
+                    <span>已登记能力</span>
+                  </div>
+                  <div>
+                    <strong>{capabilitySummary.read}</strong>
+                    <span>只读</span>
+                  </div>
+                  <div>
+                    <strong>{capabilitySummary.write}</strong>
+                    <span>需确认</span>
+                  </div>
+                </div>
                 <button className="btn-secondary" onClick={handleStartLarkAuth} disabled={authBusy}>
                   {authBusy ? '处理中...' : '开始飞书授权'}
                 </button>

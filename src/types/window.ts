@@ -65,8 +65,17 @@ export interface LarkCliInfo {
   error?: string;
 }
 
+export interface LarkCapabilityInfo {
+  description: string;
+  domain: string;
+  id: string;
+  risk: 'read' | 'write';
+  shortcut: string;
+}
+
 export interface LarkCliAPI {
   getInfo: () => Promise<IPCResponse<LarkCliInfo>>;
+  listCapabilities: () => Promise<IPCResponse<LarkCapabilityInfo[]>>;
 }
 
 /**

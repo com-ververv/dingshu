@@ -251,6 +251,16 @@ MVP 不开放：
 - `npm run smoke:siliconflow -- generate` 通过。
 - 至少 8 个真实只读 capability 验证通过或记录权限失败原因。
 
+执行记录：
+
+- 已新增 `larkCli:listCapabilities` IPC，设置页可读取当前 allowlist capability。
+- 设置页 Lark 区域展示能力总数、只读能力数、需确认能力数。
+- 已新增 lark-cli 错误分类：`auth`、`permission`、`missing_argument`、`missing_scope`、`network`、`not_found`、`timeout`、`unknown`。
+- `lark_cli_shortcut` 在 CLI 非 0 退出时返回 `errorType`，便于 UI 和模型区分授权、权限、参数和网络问题。
+- 已新增 `cli.test.ts`，覆盖缺 scope、鉴权、权限、缺参数和未知错误分类。
+- 已通过 `npm run test -- --run src/main/ai/tools/larkCliShortcut.test.ts src/main/lark/cli.test.ts`、`npm run lint`、`npx tsc --noEmit`。
+- 当前 registry 共 53 个能力，其中只读 31 个，需确认 22 个。
+
 ## 7. 阶段 14：发布验证与技术方案同步
 
 目标：

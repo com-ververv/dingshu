@@ -3,7 +3,7 @@ import type { ToolExecutionOptions } from 'ai';
 import { z } from 'zod';
 import { createApprovalId, waitForApproval } from '../approval';
 import { previewJson, type ChatToolEventSink } from '../events';
-import { getLarkCliBin, runLarkCli } from '../../lark/cli';
+import { classifyLarkCliError, getLarkCliBin, runLarkCli } from '../../lark/cli';
 import { getLarkCapability, listLarkCapabilities } from '../../lark/capabilities';
 
 const TOOL_NAME = 'lark_cli_shortcut';
@@ -212,12 +212,14 @@ export function createLarkCliShortcutTool(requestId: string, emitToolEvent: Chat
         }
 
         if (result.exitCode !== 0) {
+          const rawError = result.stderr || result.stdout || 'lark-cli failed without output';
           const output = {
             ok: false,
             capability: capability.id,
             executable: getLarkCliBin(),
             exitCode: result.exitCode,
-            error: previewJson(result.stderr || result.stdout || 'lark-cli failed without output'),
+            error: previewJson(rawError),
+            errorType: classifyLarkCliError(rawError),
           };
           emitToolEvent({
             requestId,

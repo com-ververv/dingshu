@@ -12,6 +12,16 @@ export type LarkCliResult = {
   stderr: string;
 };
 
+export type LarkCliErrorType =
+  | 'auth'
+  | 'permission'
+  | 'missing_argument'
+  | 'missing_scope'
+  | 'network'
+  | 'not_found'
+  | 'timeout'
+  | 'unknown';
+
 export type LarkCliOptions = {
   abortSignal?: AbortSignal;
   executable?: string;
@@ -62,6 +72,32 @@ export function verifyBundledLarkCli(): { ok: boolean; executable: string; packa
     packageRoot: packageRoot ?? undefined,
     sha256,
   };
+}
+
+export function classifyLarkCliError(value: string): LarkCliErrorType {
+  const text = value.toLowerCase();
+  if (text.includes('timed out') || text.includes('timeout')) {
+    return 'timeout';
+  }
+  if (text.includes('missing required scope') || text.includes('missing_scope')) {
+    return 'missing_scope';
+  }
+  if (text.includes('permission denied') || text.includes('forbidden') || text.includes('no permission')) {
+    return 'permission';
+  }
+  if (text.includes('unauthorized') || text.includes('access token') || text.includes('auth login') || text.includes('invalid token')) {
+    return 'auth';
+  }
+  if (text.includes('required flag') || text.includes('missing required') || text.includes('unknown flag')) {
+    return 'missing_argument';
+  }
+  if (text.includes('not found') || text.includes('404')) {
+    return 'not_found';
+  }
+  if (text.includes('econnreset') || text.includes('enotfound') || text.includes('network') || text.includes('socket')) {
+    return 'network';
+  }
+  return 'unknown';
 }
 
 export function runLarkCli(args: string[], options: LarkCliOptions): Promise<LarkCliResult> {

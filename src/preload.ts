@@ -72,6 +72,7 @@ const larkAuthAPI = {
 
 const larkCliAPI = {
   getInfo: () => ipcRenderer.invoke('larkCli:getInfo'),
+  listCapabilities: () => ipcRenderer.invoke('larkCli:listCapabilities'),
 };
 
 // Dialog API
