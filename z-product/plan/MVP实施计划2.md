@@ -281,3 +281,17 @@ MVP 不开放：
 - `npm run make` 通过。
 - 打包产物内 `lark-cli --version` 可执行。
 - 执行记录写入本文。
+
+执行记录：
+
+- 已同步 `z-product/tech/技术选型.md`，补充 `lark_cli_shortcut` allowlist 架构、能力分级、审批策略和不开放通用 `lark-cli api` 的原因。
+- 已通过 `npm run smoke:siliconflow -- generate`。
+- 已通过 `npm run package`。
+- 已通过 `npm run make`，产物：
+  - `out/make/DesktopStarterApp-1.0.3-arm64.dmg`
+  - `out/make/zip/darwin/arm64/DesktopStarterApp-darwin-arm64-1.0.3.zip`
+  - `out/make/zip/darwin/arm64/latest-mac.yml`
+- 已验证打包产物内 `lark-cli --version = 1.0.42`。
+- 已验证打包产物内 `lark-cli` SHA-256 为 `1506064e6209fadd8c281784a0f8230dff50f43bdc0d1fa6164e987fb44d0484`。
+- 已真实验证 8 个只读 capability 返回 `ok = true`：`contact_search_user`、`calendar_agenda`、`task_get_my_tasks`、`wiki_space_list`、`drive_search`、`im_chat_list`、`vc_search`、`task_search`。
+- 已执行密钥扫描，未发现真实 SiliconFlow API Key 入库；仅命中 `z-product/ref/lark-cli/lark-cli.md` 中的 Markdown 锚点文本。
