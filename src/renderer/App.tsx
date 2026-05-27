@@ -68,6 +68,9 @@ function getToolLabel(toolName: string): string {
   if (toolName === 'lark_message_send') {
     return '发送飞书消息';
   }
+  if (toolName === 'lark_cli_shortcut') {
+    return '飞书扩展能力';
+  }
   return toolName;
 }
 

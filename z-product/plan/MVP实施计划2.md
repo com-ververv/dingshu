@@ -122,6 +122,17 @@ MVP 不开放：
   - 会议 / 消息 / 文档类查询之一
 - Agent 能在聊天中调用 `lark_cli_shortcut` 并基于真实结果回答。
 
+执行记录：
+
+- 已新增 `src/main/lark/capabilities.ts`，登记首批只读 capability，并声明 domain、shortcut、identity、risk、timeout、allowed flags。
+- 已新增 `lark_cli_shortcut` Agent 工具，按 capability registry 构造 `lark-cli` 参数数组，拒绝未登记 capability 和越权 flag。
+- 已接入 ChatService；高频文档/消息工具继续优先使用专用工具，低频联系人、日程、任务、邮箱、会议、表格、知识库等能力走 `lark_cli_shortcut`。
+- 已新增 `larkCliShortcut.test.ts`，覆盖参数构造、布尔 flag、越权 flag 拒绝和 `sheets` 不追加 `--format` 的特殊情况。
+- 已通过 `npm run test -- --run src/main/ai/tools/larkCliShortcut.test.ts`、`npm run lint`、`npx tsc --noEmit`。
+- 已通过 `npm run smoke:siliconflow -- generate`，确认充值后 Kimi-K2.6 可正常生成。
+- 已真实验证 7 个只读 capability 返回 `ok = true`：`contact_search_user`、`calendar_agenda`、`task_get_my_tasks`、`wiki_space_list`、`drive_search`、`im_chat_list`、`vc_search`。
+- `minutes_search` 已真实调用但当前授权缺少 `minutes:minutes.search:read` scope，CLI 返回 `missing_scope`，属于授权范围问题，后续设置页需要提示补授权。
+
 ## 4. 阶段 11：写操作与审批扩展
 
 目标：
@@ -242,4 +253,3 @@ MVP 不开放：
 - `npm run make` 通过。
 - 打包产物内 `lark-cli --version` 可执行。
 - 执行记录写入本文。
-
