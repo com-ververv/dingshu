@@ -29,6 +29,17 @@ type ChatStreamEvent =
       outputPreview?: string;
       errorMessage?: string;
       elapsedMs: number;
+    }
+  | {
+      requestId: string;
+      type: 'tool-call-confirmation-required';
+      approvalId: string;
+      toolCallId: string;
+      toolName: string;
+      action: string;
+      riskSummary: string;
+      inputPreview: string;
+      targetPreview?: string;
     };
 
 // Settings API
@@ -83,6 +94,8 @@ const chatAPI = {
     messages: { role: 'user' | 'assistant' | 'system'; content: string }[];
   }) => ipcRenderer.invoke('chat:send', request),
   stop: (requestId: string) => ipcRenderer.invoke('chat:stop', requestId),
+  approveToolCall: (approvalId: string) => ipcRenderer.invoke('chat:approveToolCall', approvalId),
+  rejectToolCall: (approvalId: string, reason?: string) => ipcRenderer.invoke('chat:rejectToolCall', approvalId, reason),
   onDelta: (callback: (event: Extract<ChatStreamEvent, { type: 'delta' }>) => void) => {
     ipcRenderer.on('chat:delta', (_, event) => callback(event));
   },
@@ -98,12 +111,18 @@ const chatAPI = {
   onToolCallResult: (callback: (event: Extract<ChatStreamEvent, { type: 'tool-call-result' }>) => void) => {
     ipcRenderer.on('chat:tool-call-result', (_, event) => callback(event));
   },
+  onToolCallConfirmationRequired: (
+    callback: (event: Extract<ChatStreamEvent, { type: 'tool-call-confirmation-required' }>) => void
+  ) => {
+    ipcRenderer.on('chat:tool-call-confirmation-required', (_, event) => callback(event));
+  },
   removeStreamListeners: () => {
     ipcRenderer.removeAllListeners('chat:delta');
     ipcRenderer.removeAllListeners('chat:done');
     ipcRenderer.removeAllListeners('chat:error');
     ipcRenderer.removeAllListeners('chat:tool-call-start');
     ipcRenderer.removeAllListeners('chat:tool-call-result');
+    ipcRenderer.removeAllListeners('chat:tool-call-confirmation-required');
   },
 };
 

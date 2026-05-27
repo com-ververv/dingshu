@@ -15,6 +15,17 @@ export type ChatToolEvent =
       outputPreview?: string;
       errorMessage?: string;
       elapsedMs: number;
+    }
+  | {
+      requestId: string;
+      type: 'tool-call-confirmation-required';
+      approvalId: string;
+      toolCallId: string;
+      toolName: string;
+      action: string;
+      riskSummary: string;
+      inputPreview: string;
+      targetPreview?: string;
     };
 
 export type ChatToolEventSink = (event: ChatToolEvent) => void;

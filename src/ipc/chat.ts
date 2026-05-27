@@ -1,5 +1,6 @@
 import { BrowserWindow, ipcMain } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
+import { resolveApproval } from '../main/ai/approval';
 import { streamChat, type ChatMessage } from '../main/ai/chatService';
 import type { ChatToolEvent } from '../main/ai/events';
 
@@ -129,7 +130,37 @@ function handleChatStop(_: IpcMainInvokeEvent, requestId: string) {
   return { success: true };
 }
 
+function handleApproveToolCall(_: IpcMainInvokeEvent, approvalId: string) {
+  const success = resolveApproval(approvalId, { approved: true });
+  if (!success) {
+    return {
+      success: false,
+      error: {
+        code: 'APPROVAL_NOT_FOUND',
+        message: '没有找到待确认的工具调用。',
+      },
+    };
+  }
+  return { success: true };
+}
+
+function handleRejectToolCall(_: IpcMainInvokeEvent, approvalId: string, reason?: string) {
+  const success = resolveApproval(approvalId, { approved: false, reason: reason ?? '用户拒绝执行' });
+  if (!success) {
+    return {
+      success: false,
+      error: {
+        code: 'APPROVAL_NOT_FOUND',
+        message: '没有找到待确认的工具调用。',
+      },
+    };
+  }
+  return { success: true };
+}
+
 export function registerChatIPCHandlers(): void {
   ipcMain.handle('chat:send', handleChatSend);
   ipcMain.handle('chat:stop', handleChatStop);
+  ipcMain.handle('chat:approveToolCall', handleApproveToolCall);
+  ipcMain.handle('chat:rejectToolCall', handleRejectToolCall);
 }

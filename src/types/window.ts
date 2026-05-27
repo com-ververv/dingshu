@@ -126,14 +126,29 @@ export interface ChatToolCallResultEvent {
   elapsedMs: number;
 }
 
+export interface ChatToolCallConfirmationRequiredEvent {
+  requestId: string;
+  type: 'tool-call-confirmation-required';
+  approvalId: string;
+  toolCallId: string;
+  toolName: string;
+  action: string;
+  riskSummary: string;
+  inputPreview: string;
+  targetPreview?: string;
+}
+
 export interface ChatAPI {
   send: (request: { requestId: string; messages: ChatMessage[] }) => Promise<IPCResponse<void>>;
   stop: (requestId: string) => Promise<IPCResponse<void>>;
+  approveToolCall: (approvalId: string) => Promise<IPCResponse<void>>;
+  rejectToolCall: (approvalId: string, reason?: string) => Promise<IPCResponse<void>>;
   onDelta: (callback: (event: ChatDeltaEvent) => void) => void;
   onDone: (callback: (event: ChatDoneEvent) => void) => void;
   onError: (callback: (event: ChatErrorEvent) => void) => void;
   onToolCallStart: (callback: (event: ChatToolCallStartEvent) => void) => void;
   onToolCallResult: (callback: (event: ChatToolCallResultEvent) => void) => void;
+  onToolCallConfirmationRequired: (callback: (event: ChatToolCallConfirmationRequiredEvent) => void) => void;
   removeStreamListeners: () => void;
 }
 

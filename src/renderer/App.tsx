@@ -18,9 +18,13 @@ type ChatMessage = {
 };
 
 type ToolEvent = {
+  action?: string;
+  approvalId?: string;
+  riskSummary?: string;
   toolCallId: string;
   toolName: string;
-  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  status: 'pending_confirmation' | 'running' | 'completed' | 'failed' | 'cancelled';
+  targetPreview?: string;
   inputPreview: string;
   outputPreview?: string;
   errorMessage?: string;
@@ -64,7 +68,15 @@ function formatElapsed(elapsedMs?: number): string {
   return `${(elapsedMs / 1000).toFixed(1)}s`;
 }
 
-function ToolEventList({ events }: { events: ToolEvent[] }) {
+function ToolEventList({
+  events,
+  onApprove,
+  onReject,
+}: {
+  events: ToolEvent[];
+  onApprove: (approvalId: string) => void;
+  onReject: (approvalId: string) => void;
+}) {
   if (events.length === 0) {
     return null;
   }
@@ -75,7 +87,7 @@ function ToolEventList({ events }: { events: ToolEvent[] }) {
         <details key={event.toolCallId} className={`tool-event is-${event.status}`} open={event.status === 'running'}>
           <summary>
             <span className="tool-event-icon">
-              {event.status === 'running' ? (
+              {event.status === 'pending_confirmation' || event.status === 'running' ? (
                 <Search size={14} />
               ) : event.status === 'completed' ? (
                 <CheckCircle2 size={14} />
@@ -88,6 +100,17 @@ function ToolEventList({ events }: { events: ToolEvent[] }) {
             {event.elapsedMs !== undefined ? <span className="tool-event-elapsed">{formatElapsed(event.elapsedMs)}</span> : null}
           </summary>
           <div className="tool-event-detail">
+            {event.action ? (
+              <p>
+                <strong>动作</strong>：{event.action}
+              </p>
+            ) : null}
+            {event.targetPreview ? (
+              <p>
+                <strong>目标</strong>：{event.targetPreview}
+              </p>
+            ) : null}
+            {event.riskSummary ? <p className="tool-event-risk">{event.riskSummary}</p> : null}
             <p>
               <strong>输入</strong>
             </p>
@@ -101,6 +124,16 @@ function ToolEventList({ events }: { events: ToolEvent[] }) {
               </>
             ) : null}
             {event.errorMessage ? <p className="tool-event-error">{event.errorMessage}</p> : null}
+            {event.status === 'pending_confirmation' && event.approvalId ? (
+              <div className="tool-approval-actions">
+                <button type="button" className="primary-button" onClick={() => onApprove(event.approvalId!)}>
+                  确认执行
+                </button>
+                <button type="button" className="secondary-text-button" onClick={() => onReject(event.approvalId!)}>
+                  取消
+                </button>
+              </div>
+            ) : null}
           </div>
         </details>
       ))}
@@ -235,7 +268,17 @@ export default function App() {
           };
           return {
             ...message,
-            toolEvents: [...existingEvents.filter((item) => item.toolCallId !== event.toolCallId), nextEvent],
+            toolEvents: existingEvents.some((item) => item.toolCallId === event.toolCallId)
+              ? existingEvents.map((item) =>
+                  item.toolCallId === event.toolCallId
+                    ? {
+                        ...item,
+                        status: 'running',
+                        inputPreview: event.inputPreview,
+                      }
+                    : item
+                )
+              : [...existingEvents, nextEvent],
           };
         })
       );
@@ -264,6 +307,35 @@ export default function App() {
                   }
                 : item
             ),
+          };
+        })
+      );
+    });
+
+    window.api.chat.onToolCallConfirmationRequired((event) => {
+      if (event.requestId !== activeRequestIdRef.current) {
+        return;
+      }
+      setStatusText('Waiting approval');
+      setMessages((current) =>
+        current.map((message) => {
+          if (message.id !== streamingMessageIdRef.current) {
+            return message;
+          }
+          const existingEvents = message.toolEvents ?? [];
+          const nextEvent: ToolEvent = {
+            action: event.action,
+            approvalId: event.approvalId,
+            inputPreview: event.inputPreview,
+            riskSummary: event.riskSummary,
+            status: 'pending_confirmation',
+            targetPreview: event.targetPreview,
+            toolCallId: event.toolCallId,
+            toolName: event.toolName,
+          };
+          return {
+            ...message,
+            toolEvents: [...existingEvents.filter((item) => item.toolCallId !== event.toolCallId), nextEvent],
           };
         })
       );
@@ -375,6 +447,20 @@ export default function App() {
     toast.success('Copied');
   }
 
+  async function approveToolCall(approvalId: string) {
+    const result = await window.api.chat.approveToolCall(approvalId);
+    if (!result.success) {
+      toast.error(result.error?.message ?? 'Failed to approve tool call');
+    }
+  }
+
+  async function rejectToolCall(approvalId: string) {
+    const result = await window.api.chat.rejectToolCall(approvalId, '用户取消执行');
+    if (!result.success) {
+      toast.error(result.error?.message ?? 'Failed to reject tool call');
+    }
+  }
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -428,7 +514,13 @@ export default function App() {
                       ) : null}
                     </div>
                     <div className="message-content">
-                      {message.role === 'assistant' && message.toolEvents ? <ToolEventList events={message.toolEvents} /> : null}
+                      {message.role === 'assistant' && message.toolEvents ? (
+                        <ToolEventList
+                          events={message.toolEvents}
+                          onApprove={(approvalId) => void approveToolCall(approvalId)}
+                          onReject={(approvalId) => void rejectToolCall(approvalId)}
+                        />
+                      ) : null}
                       {message.content && message.role === 'assistant' ? (
                         <Streamdown className="markdown-content" mode="streaming" controls={false}>
                           {message.content}

@@ -384,6 +384,7 @@ body,
   color: var(--color-text-muted);
 }
 
+.tool-event.is-pending_confirmation .tool-event-icon,
 .tool-event.is-running .tool-event-icon {
   color: #0f766e;
 }
@@ -431,6 +432,31 @@ body,
 
 .tool-event-error {
   color: var(--color-error);
+}
+
+.tool-event-risk {
+  padding: var(--space-sm);
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+}
+
+.tool-approval-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.tool-approval-actions button {
+  min-height: 34px;
+  padding: 0 var(--space-md);
+  font-size: var(--text-xs);
+}
+
+.secondary-text-button {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
 }
 
 .markdown-content {
