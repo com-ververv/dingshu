@@ -12,7 +12,24 @@ import { contextBridge, ipcRenderer } from 'electron';
 type ChatStreamEvent =
   | { requestId: string; type: 'delta'; textDelta: string }
   | { requestId: string; type: 'done'; finishReason?: string; usage?: unknown }
-  | { requestId: string; type: 'error'; error: { code: string; message: string; recoverable: boolean } };
+  | { requestId: string; type: 'error'; error: { code: string; message: string; recoverable: boolean } }
+  | {
+      requestId: string;
+      type: 'tool-call-start';
+      toolCallId: string;
+      toolName: string;
+      inputPreview: string;
+    }
+  | {
+      requestId: string;
+      type: 'tool-call-result';
+      toolCallId: string;
+      toolName: string;
+      status: 'completed' | 'failed' | 'cancelled';
+      outputPreview?: string;
+      errorMessage?: string;
+      elapsedMs: number;
+    };
 
 // Settings API
 const settingsAPI = {
@@ -75,10 +92,18 @@ const chatAPI = {
   onError: (callback: (event: Extract<ChatStreamEvent, { type: 'error' }>) => void) => {
     ipcRenderer.on('chat:error', (_, event) => callback(event));
   },
+  onToolCallStart: (callback: (event: Extract<ChatStreamEvent, { type: 'tool-call-start' }>) => void) => {
+    ipcRenderer.on('chat:tool-call-start', (_, event) => callback(event));
+  },
+  onToolCallResult: (callback: (event: Extract<ChatStreamEvent, { type: 'tool-call-result' }>) => void) => {
+    ipcRenderer.on('chat:tool-call-result', (_, event) => callback(event));
+  },
   removeStreamListeners: () => {
     ipcRenderer.removeAllListeners('chat:delta');
     ipcRenderer.removeAllListeners('chat:done');
     ipcRenderer.removeAllListeners('chat:error');
+    ipcRenderer.removeAllListeners('chat:tool-call-start');
+    ipcRenderer.removeAllListeners('chat:tool-call-result');
   },
 };
 

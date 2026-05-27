@@ -107,12 +107,33 @@ export interface ChatErrorEvent {
   };
 }
 
+export interface ChatToolCallStartEvent {
+  requestId: string;
+  type: 'tool-call-start';
+  toolCallId: string;
+  toolName: string;
+  inputPreview: string;
+}
+
+export interface ChatToolCallResultEvent {
+  requestId: string;
+  type: 'tool-call-result';
+  toolCallId: string;
+  toolName: string;
+  status: 'completed' | 'failed' | 'cancelled';
+  outputPreview?: string;
+  errorMessage?: string;
+  elapsedMs: number;
+}
+
 export interface ChatAPI {
   send: (request: { requestId: string; messages: ChatMessage[] }) => Promise<IPCResponse<void>>;
   stop: (requestId: string) => Promise<IPCResponse<void>>;
   onDelta: (callback: (event: ChatDeltaEvent) => void) => void;
   onDone: (callback: (event: ChatDoneEvent) => void) => void;
   onError: (callback: (event: ChatErrorEvent) => void) => void;
+  onToolCallStart: (callback: (event: ChatToolCallStartEvent) => void) => void;
+  onToolCallResult: (callback: (event: ChatToolCallResultEvent) => void) => void;
   removeStreamListeners: () => void;
 }
 

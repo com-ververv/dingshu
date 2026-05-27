@@ -3,7 +3,7 @@
  */
 
 import React, { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, Copy, RotateCcw, Send, Settings, Square, UserRound } from 'lucide-react';
+import { Bot, CheckCircle2, Copy, RotateCcw, Search, Send, Settings, Square, UserRound, XCircle } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import { Streamdown } from 'streamdown';
 import { Settings as SettingsModal } from './components/Settings';
@@ -14,6 +14,17 @@ type ChatMessage = {
   content: string;
   status?: 'streaming' | 'completed' | 'cancelled' | 'failed';
   error?: string;
+  toolEvents?: ToolEvent[];
+};
+
+type ToolEvent = {
+  toolCallId: string;
+  toolName: string;
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  inputPreview: string;
+  outputPreview?: string;
+  errorMessage?: string;
+  elapsedMs?: number;
 };
 
 const suggestedPrompts = [
@@ -34,6 +45,67 @@ function getMessagesForModel(messages: ChatMessage[]): { role: 'user' | 'assista
       role: message.role,
       content: message.content,
     }));
+}
+
+function getToolLabel(toolName: string): string {
+  if (toolName === 'lark_doc_search') {
+    return '搜索飞书文档';
+  }
+  return toolName;
+}
+
+function formatElapsed(elapsedMs?: number): string {
+  if (elapsedMs === undefined) {
+    return '';
+  }
+  if (elapsedMs < 1000) {
+    return `${elapsedMs}ms`;
+  }
+  return `${(elapsedMs / 1000).toFixed(1)}s`;
+}
+
+function ToolEventList({ events }: { events: ToolEvent[] }) {
+  if (events.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="tool-event-list">
+      {events.map((event) => (
+        <details key={event.toolCallId} className={`tool-event is-${event.status}`} open={event.status === 'running'}>
+          <summary>
+            <span className="tool-event-icon">
+              {event.status === 'running' ? (
+                <Search size={14} />
+              ) : event.status === 'completed' ? (
+                <CheckCircle2 size={14} />
+              ) : (
+                <XCircle size={14} />
+              )}
+            </span>
+            <span>{getToolLabel(event.toolName)}</span>
+            <span className="tool-event-status">{event.status}</span>
+            {event.elapsedMs !== undefined ? <span className="tool-event-elapsed">{formatElapsed(event.elapsedMs)}</span> : null}
+          </summary>
+          <div className="tool-event-detail">
+            <p>
+              <strong>输入</strong>
+            </p>
+            <pre>{event.inputPreview}</pre>
+            {event.outputPreview ? (
+              <>
+                <p>
+                  <strong>结果</strong>
+                </p>
+                <pre>{event.outputPreview}</pre>
+              </>
+            ) : null}
+            {event.errorMessage ? <p className="tool-event-error">{event.errorMessage}</p> : null}
+          </div>
+        </details>
+      ))}
+    </div>
+  );
 }
 
 export default function App() {
@@ -142,6 +214,59 @@ export default function App() {
       activeRequestIdRef.current = null;
       streamingMessageIdRef.current = null;
       setActiveRequestId(null);
+    });
+
+    window.api.chat.onToolCallStart((event) => {
+      if (event.requestId !== activeRequestIdRef.current) {
+        return;
+      }
+      setStatusText('Using tool');
+      setMessages((current) =>
+        current.map((message) => {
+          if (message.id !== streamingMessageIdRef.current) {
+            return message;
+          }
+          const existingEvents = message.toolEvents ?? [];
+          const nextEvent: ToolEvent = {
+            toolCallId: event.toolCallId,
+            toolName: event.toolName,
+            status: 'running',
+            inputPreview: event.inputPreview,
+          };
+          return {
+            ...message,
+            toolEvents: [...existingEvents.filter((item) => item.toolCallId !== event.toolCallId), nextEvent],
+          };
+        })
+      );
+    });
+
+    window.api.chat.onToolCallResult((event) => {
+      if (event.requestId !== activeRequestIdRef.current) {
+        return;
+      }
+      setStatusText(event.status === 'completed' ? 'Tool completed' : 'Tool failed');
+      setMessages((current) =>
+        current.map((message) => {
+          if (message.id !== streamingMessageIdRef.current) {
+            return message;
+          }
+          return {
+            ...message,
+            toolEvents: (message.toolEvents ?? []).map((item) =>
+              item.toolCallId === event.toolCallId
+                ? {
+                    ...item,
+                    status: event.status,
+                    outputPreview: event.outputPreview,
+                    errorMessage: event.errorMessage,
+                    elapsedMs: event.elapsedMs,
+                  }
+                : item
+            ),
+          };
+        })
+      );
     });
 
     return () => {
@@ -303,6 +428,7 @@ export default function App() {
                       ) : null}
                     </div>
                     <div className="message-content">
+                      {message.role === 'assistant' && message.toolEvents ? <ToolEventList events={message.toolEvents} /> : null}
                       {message.content && message.role === 'assistant' ? (
                         <Streamdown className="markdown-content" mode="streaming" controls={false}>
                           {message.content}
