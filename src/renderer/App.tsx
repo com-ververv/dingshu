@@ -5,6 +5,7 @@
 import React, { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Bot, Copy, RotateCcw, Send, Settings, Square, UserRound } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
+import { Streamdown } from 'streamdown';
 import { Settings as SettingsModal } from './components/Settings';
 
 type ChatMessage = {
@@ -302,7 +303,11 @@ export default function App() {
                       ) : null}
                     </div>
                     <div className="message-content">
-                      {message.content ? (
+                      {message.content && message.role === 'assistant' ? (
+                        <Streamdown className="markdown-content" mode="streaming" controls={false}>
+                          {message.content}
+                        </Streamdown>
+                      ) : message.content ? (
                         <p>{message.content}</p>
                       ) : (
                         <p className="message-placeholder">Connecting to model...</p>
