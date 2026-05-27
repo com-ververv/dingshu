@@ -2,6 +2,7 @@ import { stepCountIs, streamText } from 'ai';
 import type { ChatToolEventSink } from './events';
 import { createSiliconFlowProvider, SILICONFLOW_MODEL_ID } from './provider';
 import { createLarkDocCreateTool } from './tools/larkDocCreate';
+import { createLarkDocReadTool } from './tools/larkDocRead';
 import { createLarkDocSearchTool } from './tools/larkDocSearch';
 
 export type ChatMessage = {
@@ -26,6 +27,9 @@ function getToolChoice(messages: ChatMessage[]) {
   if (/(创建|新建|生成|保存).*(飞书|云文档|文档)|把.+(创建|新建|生成|保存).*(飞书|云文档|文档)/.test(lastUserText)) {
     return 'required' as const;
   }
+  if (/(读取|打开|总结|分析).*(https?:\/\/|docx\/|docs\/|wiki\/|飞书链接|文档链接|这篇|第一篇|第一条|文档内容)/.test(lastUserText)) {
+    return { type: 'tool' as const, toolName: 'lark_doc_read' as const };
+  }
   if (/(查看|查找|搜索|找).*(飞书|云文档|文档|资料|测试)/.test(lastUserText)) {
     return { type: 'tool' as const, toolName: 'lark_doc_search' as const };
   }
@@ -38,7 +42,7 @@ export function streamChat(options: StreamChatOptions) {
   return streamText({
     model: siliconflow.chatModel(SILICONFLOW_MODEL_ID),
     system:
-      '你是 Pexar Lark Agent 的桌面聊天助手。默认用中文回答，回答要简洁、具体、可执行。用户要求查看、查找、搜索飞书文档或测试相关资料时，必须先调用 lark_doc_search 工具，再基于工具结果回答；用户要求创建、生成、保存飞书云文档时，必须先整理标题和 Markdown 正文，然后调用 lark_doc_create 工具；不要声称自己无法访问飞书，除非工具返回失败。',
+      '你是 Pexar Lark Agent 的桌面聊天助手。默认用中文回答，回答要简洁、具体、可执行。用户要求查看、查找、搜索飞书文档或测试相关资料时，必须先调用 lark_doc_search 工具，再基于工具结果回答；用户要求读取、打开、总结某个飞书文档链接或 token 时，必须调用 lark_doc_read 工具；用户要求创建、生成、保存飞书云文档时，必须先整理标题和 Markdown 正文，然后调用 lark_doc_create 工具；不要声称自己无法访问飞书，除非工具返回失败。',
     messages: options.messages,
     temperature: 0.4,
     maxOutputTokens: 2048,
@@ -46,6 +50,7 @@ export function streamChat(options: StreamChatOptions) {
     toolChoice: getToolChoice(options.messages),
     tools: {
       lark_doc_create: createLarkDocCreateTool(options.requestId, options.emitToolEvent),
+      lark_doc_read: createLarkDocReadTool(options.requestId, options.emitToolEvent),
       lark_doc_search: createLarkDocSearchTool(options.requestId, options.emitToolEvent),
     },
     abortSignal: options.abortSignal,

@@ -52,6 +52,12 @@ function getMessagesForModel(messages: ChatMessage[]): { role: 'user' | 'assista
 }
 
 function getToolLabel(toolName: string): string {
+  if (toolName === 'lark_doc_create') {
+    return '创建飞书文档';
+  }
+  if (toolName === 'lark_doc_read') {
+    return '读取飞书文档';
+  }
   if (toolName === 'lark_doc_search') {
     return '搜索飞书文档';
   }
