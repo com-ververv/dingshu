@@ -3,7 +3,19 @@
  */
 
 import React, { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, CheckCircle2, Copy, RotateCcw, Search, Send, Settings, Square, UserRound, XCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  Bot,
+  CheckCircle2,
+  Copy,
+  RotateCcw,
+  Search,
+  Send,
+  Settings,
+  Square,
+  UserRound,
+  XCircle,
+} from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import { Streamdown } from 'streamdown';
 import { Settings as SettingsModal } from './components/Settings';
@@ -33,10 +45,10 @@ type ToolEvent = {
 };
 
 const suggestedPrompts = [
-  '用一句话介绍你能帮我做什么',
-  '搜索飞书里和测试相关的文档',
-  '帮我把一段内容整理成飞书文档大纲',
-  '总结今天研发群的重点讨论',
+  '把这段内容创建为飞书文档',
+  '总结一下「研发群」今天的讨论',
+  '找一下上周的评估报告',
+  '给某人发送一条飞书消息',
 ];
 
 function createId(prefix: string): string {
@@ -82,6 +94,60 @@ function formatElapsed(elapsedMs?: number): string {
     return `${elapsedMs}ms`;
   }
   return `${(elapsedMs / 1000).toFixed(1)}s`;
+}
+
+function getConversationTimeGroup(timestamp?: number): string {
+  if (!timestamp) {
+    return '更早';
+  }
+  const now = new Date();
+  const date = new Date(timestamp);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const diffDays = Math.floor((startOfToday - startOfDate) / 86_400_000);
+
+  if (diffDays <= 0) {
+    return '今天';
+  }
+  if (diffDays === 1) {
+    return '昨天';
+  }
+  if (diffDays <= 7) {
+    return '近 7 天';
+  }
+  if (diffDays <= 30) {
+    return '近 30 天';
+  }
+  return '更早';
+}
+
+function formatConversationTime(timestamp?: number): string {
+  if (!timestamp) {
+    return '';
+  }
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(timestamp));
+}
+
+function getConfigItems(status: SecureSettingsStatus | null) {
+  return [
+    {
+      label: '模型',
+      ok: status?.siliconflowApiKeyConfigured === true,
+    },
+    {
+      label: '飞书应用',
+      ok: status?.larkAppIdConfigured === true && status?.larkAppSecretConfigured === true,
+    },
+    {
+      label: '飞书授权',
+      ok: status?.larkAuth.configured === true,
+    },
+  ];
 }
 
 function ToolEventList({
@@ -163,6 +229,7 @@ export default function App() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ChatConversationSummary[]>([]);
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [conversationSearch, setConversationSearch] = useState('');
   const [secureStatus, setSecureStatus] = useState<SecureSettingsStatus | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -177,6 +244,26 @@ export default function App() {
   const canSend = input.trim().length > 0 && !isStreaming && secureStatus?.siliconflowApiKeyConfigured !== false;
 
   const modelMessages = useMemo(() => getMessagesForModel(messages), [messages]);
+  const filteredConversationGroups = useMemo(() => {
+    const keyword = conversationSearch.trim().toLowerCase();
+    const filtered = keyword
+      ? conversations.filter((conversation) =>
+          `${conversation.title} ${conversation.lastMessagePreview ?? ''}`.toLowerCase().includes(keyword)
+        )
+      : conversations;
+    const groups = new Map<string, ChatConversationSummary[]>();
+    for (const conversation of filtered) {
+      const group = getConversationTimeGroup(conversation.lastMessageAt ?? conversation.updatedAt);
+      groups.set(group, [...(groups.get(group) ?? []), conversation]);
+    }
+    return ['今天', '昨天', '近 7 天', '近 30 天', '更早']
+      .map((label) => ({ label, conversations: groups.get(label) ?? [] }))
+      .filter((group) => group.conversations.length > 0);
+  }, [conversationSearch, conversations]);
+  const configItems = useMemo(() => getConfigItems(secureStatus), [secureStatus]);
+  const hasPendingApproval = messages.some((message) =>
+    message.toolEvents?.some((event) => event.status === 'pending_confirmation')
+  );
 
   async function refreshConversations(nextActiveId?: string) {
     const result = await window.api.chat.listConversations();
@@ -630,30 +717,65 @@ export default function App() {
               新建
             </button>
           </div>
+          <div className="sidebar-search">
+            <Search size={14} />
+            <input
+              value={conversationSearch}
+              onChange={(event) => setConversationSearch(event.target.value)}
+              placeholder="搜索会话"
+              aria-label="搜索会话"
+            />
+          </div>
+          <div className="sidebar-status-panel">
+            <button type="button" className="sidebar-status-title" onClick={() => setShowSettings(true)}>
+              <span>配置状态</span>
+              <Settings size={14} />
+            </button>
+            {configItems.map((item) => (
+              <div key={item.label} className={`sidebar-status-item ${item.ok ? 'is-ok' : 'is-missing'}`}>
+                {item.ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+                <span>{item.label}</span>
+              </div>
+            ))}
+            <div className={`sidebar-status-item ${hasPendingApproval ? 'is-waiting' : isStreaming ? 'is-running' : 'is-ok'}`}>
+              <span className="status-dot" />
+              <span>{hasPendingApproval ? '等待确认' : isStreaming ? '正在执行' : '空闲'}</span>
+            </div>
+          </div>
           <div className="conversation-list">
             {conversations.length === 0 ? (
               <p className="conversation-empty">暂无历史会话</p>
+            ) : filteredConversationGroups.length === 0 ? (
+              <p className="conversation-empty">没有匹配的会话</p>
             ) : (
-              conversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className={`conversation-item ${conversation.id === conversationId ? 'is-active' : ''}`}
-                >
-                  <button type="button" onClick={() => void loadConversation(conversation.id)}>
-                    <span className="conversation-title">{conversation.title}</span>
-                    {conversation.lastMessagePreview ? (
-                      <span className="conversation-preview">{conversation.lastMessagePreview}</span>
-                    ) : null}
-                  </button>
-                  <button
-                    type="button"
-                    className="conversation-delete"
-                    onClick={() => void deleteConversation(conversation.id)}
-                    title="删除会话"
-                  >
-                    ×
-                  </button>
-                </div>
+              filteredConversationGroups.map((group) => (
+                <section key={group.label} className="conversation-group">
+                  <h3>{group.label}</h3>
+                  {group.conversations.map((conversation) => (
+                    <div
+                      key={conversation.id}
+                      className={`conversation-item ${conversation.id === conversationId ? 'is-active' : ''}`}
+                    >
+                      <button type="button" onClick={() => void loadConversation(conversation.id)}>
+                        <span className="conversation-title">{conversation.title}</span>
+                        {conversation.lastMessagePreview ? (
+                          <span className="conversation-preview">{conversation.lastMessagePreview}</span>
+                        ) : null}
+                        <span className="conversation-time">
+                          {formatConversationTime(conversation.lastMessageAt ?? conversation.updatedAt)}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="conversation-delete"
+                        onClick={() => void deleteConversation(conversation.id)}
+                        title="删除会话"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </section>
               ))
             )}
           </div>
@@ -676,8 +798,8 @@ export default function App() {
               <div className="chat-empty-icon">
                 <Bot size={28} />
               </div>
-              <h2>开始一个飞书助手对话</h2>
-              <p>第一版已接入 Electron IPC 和 SiliconFlow 流式响应。先验证聊天体验，再接工具展示和持久化。</p>
+              <h2>今天要处理什么飞书任务？</h2>
+              <p>可以创建文档、查询群消息、搜索云文档或发送消息。</p>
               <div className="suggested-grid">
                 {suggestedPrompts.map((prompt) => (
                   <button key={prompt} type="button" onClick={() => void sendMessage(prompt)} disabled={isStreaming}>
