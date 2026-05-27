@@ -142,14 +142,15 @@ async function runLarkCliSmoke() {
 
   const startedAt = Date.now();
   const larkCliTool = tool({
-    description: 'Run a safe lark-cli read-only smoke command. Use this to verify local lark-cli can be launched.',
+    description: 'Run a safe lark-cli read-only smoke command. Use this to verify local lark-cli and read access.',
     inputSchema: z.object({
-      command: z.enum(['version', 'doctor_offline']).describe('Safe lark-cli command to run'),
+      command: z.enum(['version', 'doctor_offline', 'docs_search']).describe('Safe lark-cli command to run'),
+      query: z.string().optional().describe('Search keyword for docs_search'),
     }),
-    execute: async ({ command }) => {
-      const args = command === 'version' ? ['--version'] : ['doctor', '--offline'];
+    execute: async ({ command, query }) => {
+      const args = getLarkCliArgs(command, query);
       const result = await runLarkCli(args, {
-        timeoutMs: 15_000,
+        timeoutMs: command === 'docs_search' ? 30_000 : 15_000,
       });
 
       console.log(`tool:lark_cli_smoke command: ${command}`);
@@ -168,8 +169,8 @@ async function runLarkCliSmoke() {
   const result = await generateText({
     model,
     system:
-      '你是本地集成测试助手。用户要求验证 lark-cli 时，必须调用 lark_cli_smoke 工具，然后用一句中文总结工具是否能启动。',
-    prompt: '验证本机 lark-cli 是否能启动。优先检查版本。',
+      '你是本地集成测试助手。用户要求验证 lark-cli 或飞书读取能力时，必须调用 lark_cli_smoke 工具，然后用中文简要总结结果。不要编造工具输出之外的内容。',
+    prompt: '验证是否能从飞书读取内容。请搜索“测试”，并总结返回了多少条结果以及第一条标题。',
     temperature: 0,
     maxOutputTokens: 256,
     stopWhen: stepCountIs(3),
@@ -184,6 +185,16 @@ async function runLarkCliSmoke() {
   console.log('toolCalls:', JSON.stringify(collectToolCalls(result)));
   printUsage(result.usage);
   console.log('elapsedMs:', Date.now() - startedAt);
+}
+
+function getLarkCliArgs(command, query) {
+  if (command === 'version') {
+    return ['--version'];
+  }
+  if (command === 'doctor_offline') {
+    return ['doctor', '--offline'];
+  }
+  return ['docs', '+search', '--as', 'user', '--query', query || '测试', '--page-size', '3', '--format', 'json'];
 }
 
 function runLarkCli(args, { timeoutMs }) {
