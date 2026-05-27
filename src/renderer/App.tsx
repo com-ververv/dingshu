@@ -98,6 +98,38 @@ function formatElapsed(elapsedMs?: number): string {
   return `${(elapsedMs / 1000).toFixed(1)}s`;
 }
 
+function getStatusLabel(status: ToolEvent['status']): string {
+  if (status === 'pending_confirmation') {
+    return '等待确认';
+  }
+  if (status === 'running') {
+    return '正在执行';
+  }
+  if (status === 'completed') {
+    return '已完成';
+  }
+  if (status === 'cancelled') {
+    return '已拒绝';
+  }
+  return '执行失败';
+}
+
+function getMessageStatusLabel(status: ChatMessage['status']): string {
+  if (status === 'streaming') {
+    return '正在生成';
+  }
+  if (status === 'completed') {
+    return '已完成';
+  }
+  if (status === 'cancelled') {
+    return '已停止';
+  }
+  if (status === 'failed') {
+    return '失败';
+  }
+  return '';
+}
+
 function getConversationTimeGroup(timestamp?: number): string {
   if (!timestamp) {
     return '更早';
@@ -169,10 +201,27 @@ function ToolEventList({
     return null;
   }
 
+  const summary = {
+    failed: events.filter((event) => event.status === 'failed').length,
+    pending: events.filter((event) => event.status === 'pending_confirmation').length,
+    running: events.filter((event) => event.status === 'running').length,
+    total: events.length,
+  };
+
   return (
     <div className="tool-event-list">
+      <div className="tool-event-summary">
+        <span>{summary.total} 个动作</span>
+        {summary.running > 0 ? <span>{summary.running} 正在执行</span> : null}
+        {summary.pending > 0 ? <span>{summary.pending} 等待确认</span> : null}
+        {summary.failed > 0 ? <span>{summary.failed} 失败</span> : null}
+      </div>
       {events.map((event) => (
-        <details key={event.toolCallId} className={`tool-event is-${event.status}`} open={event.status === 'running'}>
+        <details
+          key={event.toolCallId}
+          className={`tool-event is-${event.status}`}
+          open={event.status === 'pending_confirmation' || event.status === 'failed'}
+        >
           <summary>
             <span className="tool-event-icon">
               {event.status === 'pending_confirmation' || event.status === 'running' ? (
@@ -184,7 +233,7 @@ function ToolEventList({
               )}
             </span>
             <span>{getToolLabel(event.toolName)}</span>
-            <span className="tool-event-status">{event.status}</span>
+            <span className="tool-event-status">{getStatusLabel(event.status)}</span>
             {event.elapsedMs !== undefined ? <span className="tool-event-elapsed">{formatElapsed(event.elapsedMs)}</span> : null}
           </summary>
           <div className="tool-event-detail">
@@ -215,10 +264,10 @@ function ToolEventList({
             {event.status === 'pending_confirmation' && event.approvalId ? (
               <div className="tool-approval-actions">
                 <button type="button" className="primary-button" onClick={() => onApprove(event.approvalId!)}>
-                  确认执行
+                  仅本次允许
                 </button>
                 <button type="button" className="secondary-text-button" onClick={() => onReject(event.approvalId!)}>
-                  取消
+                  拒绝
                 </button>
               </div>
             ) : null}
@@ -414,7 +463,7 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
-      setStatusText('Streaming');
+      setStatusText('正在生成');
       setMessages((current) =>
         current.map((message) =>
           message.id === streamingMessageIdRef.current
@@ -442,7 +491,7 @@ export default function App() {
             : message
         )
       );
-      setStatusText(event.finishReason ? `Finished: ${event.finishReason}` : 'Finished');
+      setStatusText(event.finishReason ? `已完成：${event.finishReason}` : '已完成');
       activeRequestIdRef.current = null;
       streamingMessageIdRef.current = null;
       setActiveRequestId(null);
@@ -463,7 +512,7 @@ export default function App() {
             : message
         )
       );
-      setStatusText(event.error.code === 'chat.aborted' ? 'Stopped' : 'Failed');
+      setStatusText(event.error.code === 'chat.aborted' ? '已停止' : '失败');
       if (event.error.code !== 'chat.aborted') {
         toast.error(event.error.message);
       }
@@ -476,7 +525,7 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
-      setStatusText('Using tool');
+      setStatusText('正在调用飞书');
       setMessages((current) =>
         current.map((message) => {
           if (message.id !== streamingMessageIdRef.current) {
@@ -511,7 +560,7 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
-      setStatusText(event.status === 'completed' ? 'Tool completed' : 'Tool failed');
+      setStatusText(event.status === 'completed' ? '飞书调用完成' : '飞书调用失败');
       setMessages((current) =>
         current.map((message) => {
           if (message.id !== streamingMessageIdRef.current) {
@@ -539,7 +588,7 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
-      setStatusText('Waiting approval');
+      setStatusText('等待确认');
       setMessages((current) =>
         current.map((message) => {
           if (message.id !== streamingMessageIdRef.current) {
@@ -572,6 +621,18 @@ export default function App() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages]);
+
+  useEffect(() => {
+    if (!activeRequestId) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      if (activeRequestIdRef.current) {
+        setStatusText('执行时间较长，仍在等待返回');
+      }
+    }, 15_000);
+    return () => window.clearTimeout(timer);
+  }, [activeRequestId]);
 
   useEffect(() => {
     localStorage.setItem(getDraftKey(conversationId), input);
@@ -636,7 +697,7 @@ export default function App() {
     activeRequestIdRef.current = requestId;
     streamingMessageIdRef.current = assistantMessage.id;
     setActiveRequestId(requestId);
-    setStatusText('Connecting');
+    setStatusText('正在连接');
 
     const result = await window.api.chat.send({
       assistantMessageId: assistantMessage.id,
@@ -678,7 +739,7 @@ export default function App() {
     }
     const requestId = activeRequestId;
     const messageId = streamingMessageIdRef.current;
-    setStatusText('Stopping');
+    setStatusText('正在停止');
     setMessages((current) =>
       current.map((message) =>
         message.id === messageId
@@ -862,7 +923,7 @@ export default function App() {
                     <div className="message-meta">
                       <span>{message.role === 'user' ? 'You' : 'Assistant'}</span>
                       {message.status && message.role === 'assistant' ? (
-                        <span className={`message-state is-${message.status}`}>{message.status}</span>
+                        <span className={`message-state is-${message.status}`}>{getMessageStatusLabel(message.status)}</span>
                       ) : null}
                     </div>
                     <div className="message-content">
@@ -880,7 +941,7 @@ export default function App() {
                       ) : message.content ? (
                         <p>{message.content}</p>
                       ) : (
-                        <p className="message-placeholder">Connecting to model...</p>
+                        <p className="message-placeholder">正在连接模型...</p>
                       )}
                       {message.error ? <p className="message-error">{message.error}</p> : null}
                     </div>
@@ -915,19 +976,19 @@ export default function App() {
               className="secondary-button"
               onClick={retryLastUserMessage}
               disabled={isStreaming || modelMessages.length === 0}
-              title="Retry last prompt"
+              title="重新发送上一条"
             >
               <RotateCcw size={16} />
             </button>
             {isStreaming ? (
               <button type="button" className="stop-button" onClick={() => void stopGeneration()}>
                 <Square size={15} />
-                <span>Stop</span>
+                <span>停止</span>
               </button>
             ) : (
               <button type="submit" className="primary-button" disabled={!canSend}>
                 <Send size={15} />
-                <span>Send</span>
+                <span>发送</span>
               </button>
             )}
           </div>

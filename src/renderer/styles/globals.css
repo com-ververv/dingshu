@@ -587,6 +587,22 @@ body,
   margin-bottom: var(--space-md);
 }
 
+.tool-event-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.tool-event-summary span {
+  padding: 3px 7px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+
 .tool-event {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
