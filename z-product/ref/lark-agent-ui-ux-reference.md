@@ -633,881 +633,226 @@ src/renderer/components/settings/    设置业务组件
 
 ## 17. 可移植源码参考
 
-以下代码不是整文件复制，而是从两个参考项目抽出的可移植结构。建议按当前 Electron 项目的 React/TypeScript 结构改写后落地。
+本章只列源代码绝对路径和移植说明，不包含代码片段。移植时优先参考组件结构、状态流和交互模式，不建议直接整文件复制。
 
 ### 17.1 聊天工作台布局
 
-源代码入口：
+源代码绝对路径：
 
-- `ai-sdk/chatbot/components/chat/shell.tsx`
-- `ai-sdk/chatbot/components/chat/messages.tsx`
-- `ai-sdk/chatbot/components/chat/multimodal-input.tsx`
-- `CodePilot/src/components/layout/ChatListPanel.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/shell.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/messages.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/multimodal-input.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/layout/ChatListPanel.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/layout/AppShell.tsx`
 
-可移植骨架：
+移植说明：
 
-```tsx
-type ChatWorkspaceProps = {
-  sidebar: React.ReactNode;
-  header?: React.ReactNode;
-  messages: React.ReactNode;
-  composer: React.ReactNode;
-  permissionPrompt?: React.ReactNode;
-};
-
-export function ChatWorkspace({
-  sidebar,
-  header,
-  messages,
-  composer,
-  permissionPrompt,
-}: ChatWorkspaceProps) {
-  return (
-    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
-      <aside className="h-full w-[260px] shrink-0 border-r border-border/60 bg-sidebar">
-        {sidebar}
-      </aside>
-
-      <main className="flex min-w-0 flex-1 flex-col">
-        {header && (
-          <header className="flex h-12 shrink-0 items-center border-b border-border/60 px-4">
-            {header}
-          </header>
-        )}
-
-        <section className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto flex min-h-full max-w-4xl flex-col gap-5 px-4 py-6">
-            {messages}
-          </div>
-        </section>
-
-        {permissionPrompt}
-
-        <footer className="shrink-0 border-t border-border/40 bg-background px-4 py-3">
-          <div className="mx-auto max-w-4xl">{composer}</div>
-        </footer>
-      </main>
-    </div>
-  );
-}
-```
-
-移植要点：
-
-- `ai-sdk/chatbot` 的 `ChatShell` 负责聊天骨架，`CodePilot` 的 `ChatListPanel` 负责更桌面化的侧栏。
-- Pexar MVP 不需要 artifact panel 和 split screen，先保持一个主聊天区。
-- 后续如果做右侧飞书文档预览，再把主区拆成 `chat 40% + preview 60%`。
+- 以 `shell.tsx` 的“消息区 + 底部输入框”作为主聊天骨架。
+- 以 `ChatListPanel.tsx` 的桌面侧栏作为侧栏参考，但删掉项目目录、分屏、插件导航等复杂功能。
+- Pexar MVP 只保留一个主聊天区，不迁移 artifact panel 和 split screen。
 
 ### 17.2 会话侧栏和会话项
 
-源代码入口：
+源代码绝对路径：
 
-- `ai-sdk/chatbot/components/chat/sidebar-history.tsx`
-- `CodePilot/src/components/layout/ChatListPanel.tsx`
-- `CodePilot/src/components/layout/SessionListItem.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/sidebar-history.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/sidebar-history-item.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/layout/ChatListPanel.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/layout/SessionListItem.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/layout/chat-list-utils.ts`
 
-可移植数据结构：
+移植说明：
 
-```ts
-export type ChatSessionStatus = "idle" | "running" | "pending_approval" | "error";
-
-export type ChatSessionListItem = {
-  id: string;
-  title: string;
-  updatedAt: string;
-  status: ChatSessionStatus;
-};
-
-export type GroupedSessions = {
-  today: ChatSessionListItem[];
-  yesterday: ChatSessionListItem[];
-  last7Days: ChatSessionListItem[];
-  last30Days: ChatSessionListItem[];
-  older: ChatSessionListItem[];
-};
-```
-
-可移植会话项：
-
-```tsx
-type SessionItemProps = {
-  session: ChatSessionListItem;
-  active: boolean;
-  onOpen: (id: string) => void;
-  onRename: (id: string) => void;
-  onDelete: (id: string) => void;
-};
-
-function SessionStatusDot({ status }: { status: ChatSessionStatus }) {
-  if (status === "running") {
-    return (
-      <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status-success opacity-70" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-status-success" />
-      </span>
-    );
-  }
-
-  if (status === "pending_approval") {
-    return <span className="h-2 w-2 rounded-full bg-status-warning" />;
-  }
-
-  if (status === "error") {
-    return <span className="h-2 w-2 rounded-full bg-status-error" />;
-  }
-
-  return <span className="h-2 w-2" />;
-}
-
-export function SessionItem({
-  session,
-  active,
-  onOpen,
-  onRename,
-  onDelete,
-}: SessionItemProps) {
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const showActions = menuOpen;
-
-  return (
-    <div className="group relative">
-      <button
-        className={[
-          "flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px]",
-          active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-accent/50",
-        ].join(" ")}
-        onClick={() => onOpen(session.id)}
-        type="button"
-      >
-        <SessionStatusDot status={session.status} />
-        <span className="min-w-0 flex-1 truncate font-medium">{session.title}</span>
-        <span className="w-10 shrink-0 text-right text-[11px] text-muted-foreground/50 group-hover:opacity-0">
-          {formatRelativeTime(session.updatedAt)}
-        </span>
-      </button>
-
-      <button
-        className="absolute right-2 top-1/2 hidden h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:bg-muted group-hover:flex"
-        onClick={(event) => {
-          event.stopPropagation();
-          setMenuOpen(true);
-        }}
-        type="button"
-      >
-        ...
-      </button>
-
-      {menuOpen && (
-        <div className="absolute right-2 top-7 z-20 w-32 rounded-md border bg-popover p-1 shadow-lg">
-          <button className="w-full rounded px-2 py-1 text-left text-xs hover:bg-muted" onClick={() => onRename(session.id)}>
-            重命名
-          </button>
-          <button className="w-full rounded px-2 py-1 text-left text-xs text-destructive hover:bg-destructive/10" onClick={() => onDelete(session.id)}>
-            删除
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-```
-
-需要替换：
-
-- `formatRelativeTime` 可从当前项目 utils 实现。
-- dropdown 建议替换为项目现有菜单组件；没有组件时，上面这个简化版可先落地。
-- 状态色需要在 `globals.css` 中定义语义 token。
+- 时间分组参考 `sidebar-history.tsx`。
+- 会话项 hover 菜单、更新时间替换为操作按钮、执行中/等待确认状态参考 `SessionListItem.tsx`。
+- 不迁移 CodePilot 的项目分组、工作目录、分屏会话和导入 CLI 会话能力。
 
 ### 17.3 底部输入框
 
-源代码入口：
+源代码绝对路径：
 
-- `ai-sdk/chatbot/components/chat/multimodal-input.tsx`
-- `CodePilot/src/components/chat/MessageInput.tsx`
-- `CodePilot/src/components/chat/SlashCommandPopover.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/multimodal-input.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/ai-elements/prompt-input.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/slash-commands.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/MessageInput.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/MessageInputParts.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/SlashCommandPopover.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/lib/message-input-logic.ts`
 
-可移植输入框：
+移植说明：
 
-```tsx
-type ComposerStatus = "ready" | "submitted" | "streaming" | "error";
+- 输入框布局、发送/停止按钮、空输入禁用参考 `multimodal-input.tsx`。
+- 草稿按会话保存、slash command 处理参考 `MessageInput.tsx` 和 `message-input-logic.ts`。
+- Pexar MVP 不迁移附件上传、多模态图片、模型选择、badge 系统和 CLI tools popover。
+- slash command 只保留 `/new`、`/clear`、`/settings`、`/auth`、`/search`。
 
-type ChatComposerProps = {
-  sessionId: string;
-  status: ComposerStatus;
-  disabled?: boolean;
-  suggestions?: string[];
-  onSend: (text: string) => void;
-  onStop: () => void;
-  onCommand: (command: string) => void;
-};
+### 17.4 空状态和建议指令
 
-const slashCommands = [
-  { name: "new", label: "新建会话" },
-  { name: "clear", label: "清空当前会话" },
-  { name: "settings", label: "打开设置" },
-  { name: "auth", label: "飞书授权" },
-  { name: "search", label: "搜索文档或历史" },
-];
+源代码绝对路径：
 
-export function ChatComposer({
-  sessionId,
-  status,
-  disabled,
-  suggestions = [],
-  onSend,
-  onStop,
-  onCommand,
-}: ChatComposerProps) {
-  const draftKey = `pexar-lark-agent:draft:${sessionId}`;
-  const [value, setValue] = React.useState(() => sessionStorage.getItem(draftKey) ?? "");
-  const [slashOpen, setSlashOpen] = React.useState(false);
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/greeting.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/suggested-actions.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/lib/constants.ts`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/ChatEmptyState.tsx`
 
-  React.useEffect(() => {
-    if (value) sessionStorage.setItem(draftKey, value);
-    else sessionStorage.removeItem(draftKey);
-  }, [draftKey, value]);
+移植说明：
 
-  const submit = () => {
-    const text = value.trim();
-    if (!text || disabled) return;
-
-    if (text.startsWith("/")) {
-      const command = text.slice(1).trim();
-      if (slashCommands.some((item) => item.name === command)) {
-        onCommand(command);
-        setValue("");
-      }
-      return;
-    }
-
-    onSend(text);
-    setValue("");
-  };
-
-  return (
-    <div className="space-y-3">
-      {suggestions.length > 0 && !value && (
-        <div className="flex gap-2 overflow-x-auto">
-          {suggestions.map((suggestion) => (
-            <button
-              className="shrink-0 rounded-lg border border-border/60 bg-card px-3 py-2 text-left text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-              key={suggestion}
-              onClick={() => onSend(suggestion)}
-              type="button"
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="relative rounded-2xl border border-border/50 bg-card shadow-sm focus-within:ring-1 focus-within:ring-ring/30">
-        {slashOpen && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border bg-popover p-1 shadow-lg">
-            {slashCommands.map((command) => (
-              <button
-                className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs hover:bg-muted"
-                key={command.name}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  onCommand(command.name);
-                  setValue("");
-                  setSlashOpen(false);
-                }}
-                type="button"
-              >
-                <span className="font-mono">/{command.name}</span>
-                <span className="text-muted-foreground">{command.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        <textarea
-          className="min-h-24 w-full resize-none bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/50"
-          onChange={(event) => {
-            const next = event.target.value;
-            setValue(next);
-            setSlashOpen(next.startsWith("/") && !next.includes(" "));
-          }}
-          onKeyDown={(event) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-              event.preventDefault();
-              submit();
-            }
-            if (event.key === "Escape") setSlashOpen(false);
-          }}
-          placeholder="输入飞书任务..."
-          value={value}
-        />
-
-        <div className="flex items-center justify-between px-3 pb-3">
-          <div className="text-[11px] text-muted-foreground">
-            {value.startsWith("/") ? "选择命令" : "⌘ Enter 发送"}
-          </div>
-
-          {status === "submitted" || status === "streaming" ? (
-            <button className="rounded-lg border px-3 py-1.5 text-xs" onClick={onStop} type="button">
-              停止
-            </button>
-          ) : (
-            <button
-              className="rounded-lg bg-primary px-3 py-1.5 text-xs text-primary-foreground disabled:opacity-40"
-              disabled={!value.trim() || disabled}
-              onClick={submit}
-              type="button"
-            >
-              发送
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-需要替换：
-
-- 如果当前项目已有 Button/Textarea 组件，应替换原生元素。
-- Pexar MVP 不需要附件上传，所以去掉 `ai-sdk/chatbot` 的 attachments 逻辑。
-- `/model` 不迁移。
-
-### 17.4 空状态建议指令
-
-源代码入口：
-
-- `ai-sdk/chatbot/components/chat/greeting.tsx`
-- `ai-sdk/chatbot/components/chat/suggested-actions.tsx`
-- `CodePilot/src/components/chat/ChatEmptyState.tsx`
-
-可移植组件：
-
-```tsx
-type ChatEmptyStateProps = {
-  configured: boolean;
-  missingItems: string[];
-  onOpenSettings: () => void;
-  onAuthorizeLark: () => void;
-  onSendSuggestion: (text: string) => void;
-};
-
-const larkSuggestions = [
-  "把这段内容创建为飞书文档",
-  "总结一下「研发群」今天的讨论",
-  "找一下上周的评估报告",
-  "给某人发送一条飞书消息",
-];
-
-export function ChatEmptyState({
-  configured,
-  missingItems,
-  onOpenSettings,
-  onAuthorizeLark,
-  onSendSuggestion,
-}: ChatEmptyStateProps) {
-  if (!configured) {
-    return (
-      <div className="flex min-h-full items-center justify-center px-4">
-        <div className="w-full max-w-lg rounded-lg border bg-card p-5 text-center">
-          <h2 className="text-base font-semibold">需要完成配置</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {missingItems.join("、")} 未配置，暂时无法执行飞书任务。
-          </p>
-          <div className="mt-4 flex justify-center gap-2">
-            <button className="rounded-md border px-3 py-1.5 text-sm" onClick={onOpenSettings} type="button">
-              打开设置
-            </button>
-            <button className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground" onClick={onAuthorizeLark} type="button">
-              开始授权
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-full items-center justify-center px-4">
-      <div className="w-full max-w-2xl text-center">
-        <h2 className="text-2xl font-semibold">今天要处理什么飞书任务？</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          可以创建文档、查询群消息、搜索云文档或发送消息。
-        </p>
-        <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {larkSuggestions.map((suggestion) => (
-            <button
-              className="rounded-xl border bg-card px-4 py-3 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-              key={suggestion}
-              onClick={() => onSendSuggestion(suggestion)}
-              type="button"
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-```
+- 空状态视觉和 suggested actions 交互参考 `greeting.tsx`、`suggested-actions.tsx`。
+- 配置缺失时的卡片式提示参考 `ChatEmptyState.tsx`。
+- 文案必须替换为飞书任务，不保留 Next.js、项目目录、Assistant Workspace 等内容。
 
 ### 17.5 紧凑工具调用组
 
-源代码入口：
+源代码绝对路径：
 
-- `CodePilot/src/components/ai-elements/tool-actions-group.tsx`
-- `CodePilot/src/components/chat/StreamingMessage.tsx`
-- `ai-sdk/chatbot/components/ai-elements/tool.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/ai-elements/tool-actions-group.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/StreamingMessage.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/ai-elements/tool.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/message.tsx`
 
-可移植数据结构：
+移植说明：
 
-```ts
-export type LarkToolStatus = "pending" | "running" | "success" | "error" | "denied";
-
-export type LarkToolAction = {
-  id: string;
-  kind: "doc" | "message" | "contact" | "chat" | "auth" | "system";
-  name: string;
-  summary: string;
-  input?: unknown;
-  output?: unknown;
-  error?: string;
-  status: LarkToolStatus;
-};
-```
-
-可移植组件：
-
-```tsx
-function statusLabel(status: LarkToolStatus) {
-  switch (status) {
-    case "pending":
-      return "等待中";
-    case "running":
-      return "正在执行";
-    case "success":
-      return "已完成";
-    case "error":
-      return "执行失败";
-    case "denied":
-      return "已拒绝";
-  }
-}
-
-function StatusMark({ status }: { status: LarkToolStatus }) {
-  if (status === "running") return <span className="h-3 w-3 animate-spin rounded-full border border-muted-foreground border-t-transparent" />;
-  if (status === "success") return <span className="text-status-success">✓</span>;
-  if (status === "error") return <span className="text-status-error">×</span>;
-  if (status === "denied") return <span className="text-status-warning">!</span>;
-  return <span className="text-muted-foreground">•</span>;
-}
-
-export function LarkToolActionsGroup({ tools }: { tools: LarkToolAction[] }) {
-  const [expanded, setExpanded] = React.useState(() => tools.some((tool) => tool.status === "running"));
-  if (tools.length === 0) return null;
-
-  const running = tools.filter((tool) => tool.status === "running").length;
-  const failed = tools.filter((tool) => tool.status === "error").length;
-  const summary = failed > 0
-    ? `${tools.length} 个动作 · ${failed} 个失败`
-    : running > 0
-      ? `${tools.length} 个动作 · ${running} 正在执行`
-      : `${tools.length} 个动作 · 已完成`;
-
-  return (
-    <div className="w-[min(100%,48rem)] text-xs">
-      <button
-        className="flex w-full items-center gap-2 rounded-sm py-1 text-left text-muted-foreground hover:bg-muted/40"
-        onClick={() => setExpanded((value) => !value)}
-        type="button"
-      >
-        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] tabular-nums">{tools.length}</span>
-        <span>{summary}</span>
-        <span className="ml-auto">{expanded ? "⌄" : "›"}</span>
-      </button>
-
-      {expanded && (
-        <div className="ml-2 mt-1 space-y-1 border-l border-border/60 pl-3">
-          {tools.map((tool) => (
-            <details className="group" key={tool.id}>
-              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm px-1 py-1 hover:bg-muted/30">
-                <StatusMark status={tool.status} />
-                <span className="font-medium">{tool.name}</span>
-                <span className="min-w-0 flex-1 truncate text-muted-foreground">{tool.summary}</span>
-                <span className="text-[10px] text-muted-foreground/60">{statusLabel(tool.status)}</span>
-              </summary>
-
-              <div className="mt-1 space-y-2 rounded-md bg-muted/40 p-2 font-mono text-[11px]">
-                {tool.input !== undefined && (
-                  <pre className="overflow-x-auto whitespace-pre-wrap">{JSON.stringify(tool.input, null, 2)}</pre>
-                )}
-                {tool.output !== undefined && (
-                  <pre className="overflow-x-auto whitespace-pre-wrap">{JSON.stringify(tool.output, null, 2)}</pre>
-                )}
-                {tool.error && <pre className="text-status-error">{tool.error}</pre>}
-              </div>
-            </details>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-```
-
-迁移建议：
-
-- CodePilot 的原组件有工具 registry 和 context grouping，MVP 可先用 `kind/name/summary/status` 简化。
-- 后续再加“连续读取/搜索自动合并”。
-- 如果只发生一个失败工具，可改用 chatbot 的大卡片显示完整错误。
+- MVP 默认参考 CodePilot 的 `ToolActionsGroup`：一行摘要、展开列表、状态点。
+- 单个重要工具、失败详情或参数/结果 JSON 展示可参考 chatbot 的 `Tool` 组件。
+- Pexar 工具分类应改为文档、消息、联系人、群组、授权、系统。
+- 先不迁移 CodePilot 的 widget、image、agent、terminal 专用 renderer。
 
 ### 17.6 敏感操作确认条
 
-源代码入口：
+源代码绝对路径：
 
-- `CodePilot/src/components/chat/PermissionPrompt.tsx`
-- `CodePilot/src/components/ai-elements/confirmation.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/PermissionPrompt.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/ai-elements/confirmation.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/ChatView.tsx`
 
-可移植数据结构：
+移植说明：
 
-```ts
-export type LarkPermissionRequest = {
-  id: string;
-  action: "send_message" | "update_doc" | "delete_doc" | "change_permission";
-  title: string;
-  target: string;
-  preview: string;
-  input?: unknown;
-};
-```
+- 底部权限确认条结构参考 `PermissionPrompt.tsx`。
+- 状态组件拆分思路参考 `confirmation.tsx`。
+- 与流式会话的暂停/继续连接方式参考 `ChatView.tsx` 中 `pendingPermission` 和 `respondToPermission` 的使用。
+- MVP 只保留“拒绝”和“仅本次允许”，暂缓“本会话允许”。
 
-可移植组件：
+### 17.7 设置页和凭证表单
 
-```tsx
-type LarkPermissionPromptProps = {
-  request: LarkPermissionRequest | null;
-  onAllowOnce: (id: string) => void;
-  onDeny: (id: string) => void;
-};
+源代码绝对路径：
 
-export function LarkPermissionPrompt({
-  request,
-  onAllowOnce,
-  onDeny,
-}: LarkPermissionPromptProps) {
-  const [detailsOpen, setDetailsOpen] = React.useState(false);
-  if (!request) return null;
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/settings/SettingsLayout.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/settings/ProviderManager.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/settings/ProviderForm.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/settings/PresetConnectDialog.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/settings/ProviderDoctorDialog.tsx`
 
-  return (
-    <div className="border-t border-border bg-background px-4 py-3">
-      <div className="mx-auto max-w-3xl rounded-lg border border-status-warning/40 bg-status-warning-muted p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold">{request.title}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">目标：{request.target}</p>
-            <div className="mt-2 rounded-md bg-background/70 p-2 text-xs leading-relaxed">
-              {request.preview}
-            </div>
-          </div>
+移植说明：
 
-          <div className="flex shrink-0 gap-2">
-            <button className="rounded-md border px-3 py-1.5 text-xs" onClick={() => onDeny(request.id)} type="button">
-              拒绝
-            </button>
-            <button className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground" onClick={() => onAllowOnce(request.id)} type="button">
-              仅本次允许
-            </button>
-          </div>
-        </div>
+- 设置页左侧分类、右侧内容布局参考 `SettingsLayout.tsx`。
+- 凭证编辑时不回显真实 key、留空表示保留、清除凭证等逻辑参考 `ProviderForm.tsx` 和 `PresetConnectDialog.tsx`。
+- 测试连接和诊断体验参考 `ProviderManager.tsx`、`ProviderDoctorDialog.tsx`。
+- Pexar 只保留硅基流动 API Key、固定模型、飞书 appId/appSecret、飞书授权，不迁移多服务商管理。
 
-        {request.input !== undefined && (
-          <div className="mt-3">
-            <button
-              className="text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => setDetailsOpen((value) => !value)}
-              type="button"
-            >
-              {detailsOpen ? "收起参数" : "查看参数"}
-            </button>
-            {detailsOpen && (
-              <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-muted p-2 font-mono text-[11px]">
-                {JSON.stringify(request.input, null, 2)}
-              </pre>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-```
+### 17.8 配置缺失提示和设置入口
 
-接入方式：
+源代码绝对路径：
 
-- Agent 准备执行敏感 `lark-cli` 动作时，暂停执行并生成 `LarkPermissionRequest`。
-- 用户点击“仅本次允许”后继续执行。
-- 用户点击“拒绝”后把拒绝结果写回消息流。
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/setup/SetupCenter.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/setup/ProviderCard.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/setup/ProjectDirCard.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/ChatEmptyState.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/layout/AppShell.tsx`
 
-### 17.7 设置页分栏和凭证表单
+移植说明：
 
-源代码入口：
+- PRD 明确不做首次引导，所以不要迁移 SetupCenter 的 onboarding 流程。
+- 只借鉴配置完成度、状态卡片和“打开设置”事件入口。
+- 聊天页配置缺失提示优先级高于 suggested actions。
 
-- `CodePilot/src/components/settings/SettingsLayout.tsx`
-- `CodePilot/src/components/settings/ProviderForm.tsx`
-- `CodePilot/src/components/settings/PresetConnectDialog.tsx`
+### 17.9 流式状态和长任务反馈
 
-可移植设置布局：
+源代码绝对路径：
 
-```tsx
-type SettingsSection = "general" | "model" | "lark-app" | "lark-auth" | "about";
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/StreamingMessage.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/ChatView.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/lib/stream-session-manager.ts`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/hooks/useStreamSubscription.ts`
 
-const settingSections: Array<{ id: SettingsSection; label: string }> = [
-  { id: "general", label: "通用" },
-  { id: "model", label: "模型" },
-  { id: "lark-app", label: "飞书应用" },
-  { id: "lark-auth", label: "飞书授权" },
-  { id: "about", label: "关于" },
-];
+移植说明：
 
-export function SettingsLayout() {
-  const [active, setActive] = React.useState<SettingsSection>("general");
+- thinking 阶段、elapsed timer、长时间运行警告参考 `StreamingMessage.tsx`。
+- streaming snapshot 和工具状态更新方式参考 `ChatView.tsx`、`stream-session-manager.ts`。
+- Pexar MVP 不需要完整 stream session manager，可先在当前会话状态里保存 `startedAt`、`statusText`、`toolActions`。
 
-  return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-border/60 px-6 py-4">
-        <h1 className="text-xl font-semibold">设置</h1>
-        <p className="text-sm text-muted-foreground">管理模型、飞书应用和授权状态。</p>
-      </div>
+### 17.10 右侧飞书文档预览面板
 
-      <div className="flex min-h-0 flex-1">
-        <nav className="flex w-52 shrink-0 flex-col gap-1 border-r border-border/60 p-3">
-          {settingSections.map((section) => (
-            <button
-              className={[
-                "rounded-md px-3 py-2 text-left text-sm",
-                active === section.id ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-              ].join(" ")}
-              key={section.id}
-              onClick={() => setActive(section.id)}
-              type="button"
-            >
-              {section.label}
-            </button>
-          ))}
-        </nav>
+源代码绝对路径：
 
-        <div className="min-w-0 flex-1 overflow-auto p-6">
-          {active === "general" && <GeneralSettings />}
-          {active === "model" && <ModelSettings />}
-          {active === "lark-app" && <LarkAppSettings />}
-          {active === "lark-auth" && <LarkAuthSettings />}
-          {active === "about" && <AboutSettings />}
-        </div>
-      </div>
-    </div>
-  );
-}
-```
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/artifact.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/document-preview.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/artifact-actions.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/hooks/use-artifact.ts`
 
-凭证输入模式：
+移植说明：
 
-```tsx
-type SecretFieldProps = {
-  label: string;
-  hasStoredValue: boolean;
-  value: string;
-  onChange: (value: string) => void;
-  onClearStoredValue: () => void;
-};
+- MVP 暂缓右侧面板。
+- P1 只借鉴 artifact 的“聊天区收窄 + 右侧预览”布局。
+- 不迁移版本管理、diff、代码编辑器、图片和表格 artifact。
 
-export function SecretField({
-  label,
-  hasStoredValue,
-  value,
-  onChange,
-  onClearStoredValue,
-}: SecretFieldProps) {
-  return (
-    <label className="block space-y-1.5">
-      <span className="text-sm font-medium">{label}</span>
-      <input
-        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={hasStoredValue ? "已保存，留空表示不修改" : "请输入"}
-        type="password"
-        value={value}
-      />
-      {hasStoredValue && (
-        <button className="text-xs text-destructive hover:underline" onClick={onClearStoredValue} type="button">
-          清除已保存凭证
-        </button>
-      )}
-    </label>
-  );
-}
-```
+### 17.11 消息操作
 
-迁移重点：
+源代码绝对路径：
 
-- 不要把已保存的密钥读回 renderer。
-- 用户留空表示保留已有值。
-- 明确提供“清除已保存凭证”动作。
-- 保存到系统 keychain，不写入普通 SQLite 明文字段。
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/message-actions.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/message-editor.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/components/chat/message.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/chat/MessageItem.tsx`
 
-### 17.8 流式状态和长任务反馈
+移植说明：
 
-源代码入口：
+- hover 后显示复制、编辑、重新生成参考 chatbot。
+- Pexar MVP 必须有复制和重新生成；编辑用户消息可作为 P1。
+- 不迁移点赞/点踩。
 
-- `CodePilot/src/components/chat/StreamingMessage.tsx`
-- `CodePilot/src/components/chat/ChatView.tsx`
+### 17.12 视觉和组件治理
 
-可移植组件：
+源代码绝对路径：
 
-```tsx
-type StreamingStatusBarProps = {
-  statusText?: string;
-  startedAt: number;
-  onStop?: () => void;
-};
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/chatbot/app/globals.css`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/app/globals.css`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/docs/ui-governance.md`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/ui/icon.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/patterns/StatusBanner.tsx`
+- `/Users/yanghaibin/VSCodeProject/NodeJS/ai-sdk/CodePilot/src/components/patterns/SettingsCard.tsx`
 
-export function StreamingStatusBar({
-  statusText = "正在思考...",
-  startedAt,
-  onStop,
-}: StreamingStatusBarProps) {
-  const [elapsed, setElapsed] = React.useState(() => Math.floor((Date.now() - startedAt) / 1000));
+移植说明：
 
-  React.useEffect(() => {
-    const timer = window.setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startedAt) / 1000));
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [startedAt]);
+- 颜色 token、轻边框、hover 操作、状态色参考两个项目的 `globals.css`。
+- 组件分层参考 `docs/ui-governance.md`。
+- 图标统一入口可参考 `icon.tsx`，但是否采用 Phosphor 取决于当前项目依赖。
 
-  const warning = elapsed >= 15;
-  const critical = elapsed >= 60;
+### 17.13 建议落地到当前项目的文件
 
-  return (
-    <div className="flex items-center gap-3 px-1 py-2 text-xs text-muted-foreground">
-      <span className={critical ? "text-status-error" : warning ? "text-status-warning" : undefined}>
-        {statusText}
-      </span>
-      <span className="tabular-nums">{elapsed}s</span>
-      {warning && !critical && <span className="text-status-warning">执行时间较长</span>}
-      {critical && <span className="text-status-error">可能卡住</span>}
-      {critical && onStop && (
-        <button className="ml-auto rounded-md border px-2 py-1 text-[11px]" onClick={onStop} type="button">
-          停止
-        </button>
-      )}
-    </div>
-  );
-}
-```
+当前项目建议新增或改造以下文件：
 
-接入建议：
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/ChatWorkspace.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/ChatSidebar.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/SessionItem.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/MessageList.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/MessageItem.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/ChatComposer.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/ChatEmptyState.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/LarkToolActionsGroup.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/LarkPermissionPrompt.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/StreamingStatusBar.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/LarkDocPreview.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/settings/SettingsLayout.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/settings/SecretField.tsx`
 
-- streaming 开始时记录 `startedAt`。
-- 当前工具变化时更新 `statusText`。
-- 例如：`正在查询群消息...`、`正在创建飞书文档...`。
+P0 优先落地：
 
-### 17.9 右侧文档预览面板
-
-源代码入口：
-
-- `ai-sdk/chatbot/components/chat/artifact.tsx`
-- `ai-sdk/chatbot/components/chat/document-preview.tsx`
-
-P1 可移植骨架：
-
-```tsx
-type LarkDocPreviewProps = {
-  open: boolean;
-  title: string;
-  content: string;
-  createdUrl?: string;
-  onClose: () => void;
-  onCreate: () => void;
-};
-
-export function LarkDocPreview({
-  open,
-  title,
-  content,
-  createdUrl,
-  onClose,
-  onCreate,
-}: LarkDocPreviewProps) {
-  if (!open) return null;
-
-  return (
-    <aside className="h-full w-[48%] shrink-0 border-l border-border/60 bg-sidebar">
-      <div className="flex h-12 items-center justify-between border-b border-border/60 px-4">
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold">{title}</div>
-          <div className="text-xs text-muted-foreground">
-            {createdUrl ? "已创建" : "创建前预览"}
-          </div>
-        </div>
-        <button className="rounded-md px-2 py-1 text-xs hover:bg-muted" onClick={onClose} type="button">
-          关闭
-        </button>
-      </div>
-
-      <div className="h-[calc(100%-6rem)] overflow-auto p-4">
-        <article className="prose prose-sm max-w-none dark:prose-invert">
-          <h1>{title}</h1>
-          <pre className="whitespace-pre-wrap font-sans">{content}</pre>
-        </article>
-      </div>
-
-      <div className="flex h-12 items-center justify-end gap-2 border-t border-border/60 px-4">
-        {createdUrl ? (
-          <a className="text-sm text-primary hover:underline" href={createdUrl} rel="noreferrer" target="_blank">
-            打开飞书文档
-          </a>
-        ) : (
-          <button className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground" onClick={onCreate} type="button">
-            创建到飞书
-          </button>
-        )}
-      </div>
-    </aside>
-  );
-}
-```
-
-### 17.10 建议落地文件映射
-
-当前项目可按下面方式新增或改造：
-
-```text
-src/renderer/components/chat/ChatWorkspace.tsx
-src/renderer/components/chat/ChatSidebar.tsx
-src/renderer/components/chat/SessionItem.tsx
-src/renderer/components/chat/MessageList.tsx
-src/renderer/components/chat/MessageItem.tsx
-src/renderer/components/chat/ChatComposer.tsx
-src/renderer/components/chat/ChatEmptyState.tsx
-src/renderer/components/chat/LarkToolActionsGroup.tsx
-src/renderer/components/chat/LarkPermissionPrompt.tsx
-src/renderer/components/chat/StreamingStatusBar.tsx
-src/renderer/components/chat/LarkDocPreview.tsx
-src/renderer/components/settings/SettingsLayout.tsx
-src/renderer/components/settings/SecretField.tsx
-```
-
-建议先落地 P0 文件：
-
-```text
-ChatWorkspace.tsx
-ChatSidebar.tsx
-SessionItem.tsx
-ChatComposer.tsx
-ChatEmptyState.tsx
-LarkToolActionsGroup.tsx
-LarkPermissionPrompt.tsx
-SettingsLayout.tsx
-SecretField.tsx
-```
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/ChatWorkspace.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/ChatSidebar.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/SessionItem.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/ChatComposer.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/ChatEmptyState.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/LarkToolActionsGroup.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/chat/LarkPermissionPrompt.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/settings/SettingsLayout.tsx`
+- `/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/src/renderer/components/settings/SecretField.tsx`
