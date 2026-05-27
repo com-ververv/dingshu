@@ -6,19 +6,27 @@
 
 import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { DatabaseInfo } from '../../types/window';
+import { DatabaseInfo, SecureSettingsStatus, LarkAuthStartResult } from '../../types/window';
 
 interface SettingsProps {
   onClose: () => void;
 }
 
 export function Settings({ onClose }: SettingsProps) {
-  const [activeTab, setActiveTab] = useState<'storage' | 'about'>('storage');
+  const [activeTab, setActiveTab] = useState<'ai' | 'lark' | 'storage' | 'about'>('ai');
 
   // Database location state
   const [dbInfo, setDbInfo] = useState<DatabaseInfo | null>(null);
   const [migrating, setMigrating] = useState(false);
   const [migrationResult, setMigrationResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [secureStatus, setSecureStatus] = useState<SecureSettingsStatus | null>(null);
+  const [siliconflowApiKey, setSiliconflowApiKey] = useState('');
+  const [larkAppId, setLarkAppId] = useState('');
+  const [larkAppSecret, setLarkAppSecret] = useState('');
+  const [savingCredentials, setSavingCredentials] = useState(false);
+  const [credentialResult, setCredentialResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [authResult, setAuthResult] = useState<LarkAuthStartResult | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
 
   // App version
   const [appVersion, setAppVersion] = useState<string>('...');
@@ -37,9 +45,78 @@ export function Settings({ onClose }: SettingsProps) {
       if (versionResult.success && versionResult.data) {
         setAppVersion(versionResult.data);
       }
+
+      await loadSecureStatus();
     };
     loadSettings();
   }, []);
+
+  const loadSecureStatus = async () => {
+    const statusResult = await window.api.secureSettings.getStatus();
+    if (statusResult.success && statusResult.data) {
+      setSecureStatus(statusResult.data);
+    }
+  };
+
+  const handleSaveCredentials = async () => {
+    setSavingCredentials(true);
+    setCredentialResult(null);
+    try {
+      const result = await window.api.secureSettings.saveCredentials({
+        larkAppId,
+        larkAppSecret,
+        siliconflowApiKey,
+      });
+      if (result.success) {
+        setCredentialResult({ success: true, message: '凭证已安全保存。' });
+        setSiliconflowApiKey('');
+        setLarkAppId('');
+        setLarkAppSecret('');
+        await loadSecureStatus();
+      } else {
+        setCredentialResult({ success: false, message: result.error?.message ?? '保存失败。' });
+      }
+    } finally {
+      setSavingCredentials(false);
+    }
+  };
+
+  const handleStartLarkAuth = async () => {
+    setAuthBusy(true);
+    setAuthResult(null);
+    try {
+      const result = await window.api.larkAuth.start('docs,drive,im');
+      if (result.success && result.data) {
+        setAuthResult(result.data);
+        if (result.data.verificationUrl) {
+          await window.api.shell.openExternal(result.data.verificationUrl);
+        }
+      } else {
+        setCredentialResult({ success: false, message: result.error?.message ?? '启动飞书授权失败。' });
+      }
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const handleCompleteLarkAuth = async () => {
+    if (!authResult?.deviceCode) {
+      return;
+    }
+    setAuthBusy(true);
+    try {
+      const result = await window.api.larkAuth.complete(authResult.deviceCode);
+      if (result.success) {
+        setCredentialResult({ success: true, message: '飞书授权已完成。' });
+        setAuthResult(null);
+        await loadSecureStatus();
+      } else {
+        setCredentialResult({ success: false, message: result.error?.message ?? '完成飞书授权失败。' });
+      }
+    } finally {
+      setAuthBusy(false);
+    }
+  };
 
   const handleMigrateToDocuments = async () => {
     if (!dbInfo?.isLegacyLocation) {
@@ -117,6 +194,18 @@ export function Settings({ onClose }: SettingsProps) {
 
         <div className="settings-tabs">
           <button
+            className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ai')}
+          >
+            AI
+          </button>
+          <button
+            className={`settings-tab ${activeTab === 'lark' ? 'active' : ''}`}
+            onClick={() => setActiveTab('lark')}
+          >
+            Lark
+          </button>
+          <button
             className={`settings-tab ${activeTab === 'storage' ? 'active' : ''}`}
             onClick={() => setActiveTab('storage')}
           >
@@ -131,6 +220,96 @@ export function Settings({ onClose }: SettingsProps) {
         </div>
 
         <div className="settings-content">
+          {activeTab === 'ai' && (
+            <section className="settings-section">
+              <h3>SiliconFlow</h3>
+              <p className="section-description">API Key 会通过 Electron safeStorage 加密后保存到本地数据库。</p>
+              <div className={`db-status ${secureStatus?.safeStorageAvailable ? 'success' : 'warning'}`}>
+                <span className="status-icon">{secureStatus?.safeStorageAvailable ? 'OK' : '!'}</span>
+                <span>{secureStatus?.safeStorageAvailable ? 'safeStorage 可用' : 'safeStorage 不可用，无法保存凭证'}</span>
+              </div>
+              <div className="credential-row">
+                <span>API Key</span>
+                <span className={secureStatus?.siliconflowApiKeyConfigured ? 'configured' : 'not-configured'}>
+                  {secureStatus?.siliconflowApiKeyConfigured ? '已配置' : '未配置'}
+                </span>
+              </div>
+              <input
+                type="password"
+                value={siliconflowApiKey}
+                onChange={(event) => setSiliconflowApiKey(event.target.value)}
+                placeholder="输入新的 SiliconFlow API Key"
+                disabled={!secureStatus?.safeStorageAvailable}
+              />
+              <button
+                className="primary-button settings-action"
+                onClick={handleSaveCredentials}
+                disabled={savingCredentials || !secureStatus?.safeStorageAvailable || !siliconflowApiKey.trim()}
+              >
+                {savingCredentials ? '保存中...' : '保存 API Key'}
+              </button>
+              {credentialResult && <div className={`test-result ${credentialResult.success ? 'success' : 'error'}`}>{credentialResult.message}</div>}
+            </section>
+          )}
+
+          {activeTab === 'lark' && (
+            <section className="settings-section">
+              <h3>Feishu / Lark</h3>
+              <p className="section-description">appId / appSecret 会加密保存；用户授权由 lark-cli 设备码流程完成。</p>
+              <div className="credential-grid">
+                <div className="credential-row">
+                  <span>App ID</span>
+                  <span className={secureStatus?.larkAppIdConfigured ? 'configured' : 'not-configured'}>
+                    {secureStatus?.larkAppIdConfigured ? '已配置' : '未配置'}
+                  </span>
+                </div>
+                <input
+                  type="password"
+                  value={larkAppId}
+                  onChange={(event) => setLarkAppId(event.target.value)}
+                  placeholder="输入飞书 appId"
+                  disabled={!secureStatus?.safeStorageAvailable}
+                />
+                <div className="credential-row">
+                  <span>App Secret</span>
+                  <span className={secureStatus?.larkAppSecretConfigured ? 'configured' : 'not-configured'}>
+                    {secureStatus?.larkAppSecretConfigured ? '已配置' : '未配置'}
+                  </span>
+                </div>
+                <input
+                  type="password"
+                  value={larkAppSecret}
+                  onChange={(event) => setLarkAppSecret(event.target.value)}
+                  placeholder="输入飞书 appSecret"
+                  disabled={!secureStatus?.safeStorageAvailable}
+                />
+              </div>
+              <button
+                className="primary-button settings-action"
+                onClick={handleSaveCredentials}
+                disabled={savingCredentials || !secureStatus?.safeStorageAvailable || (!larkAppId.trim() && !larkAppSecret.trim())}
+              >
+                {savingCredentials ? '保存中...' : '保存飞书凭证'}
+              </button>
+              <div className="auth-section">
+                <button className="btn-secondary" onClick={handleStartLarkAuth} disabled={authBusy}>
+                  {authBusy ? '处理中...' : '开始飞书授权'}
+                </button>
+                {authResult?.verificationUrl ? (
+                  <div className="auth-result">
+                    <label>授权链接</label>
+                    <code>{authResult.verificationUrl}</code>
+                    {authResult.userCode ? <p>验证码：{authResult.userCode}</p> : null}
+                    <button className="primary-button" onClick={handleCompleteLarkAuth} disabled={authBusy}>
+                      我已完成授权
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+              {credentialResult && <div className={`test-result ${credentialResult.success ? 'success' : 'error'}`}>{credentialResult.message}</div>}
+            </section>
+          )}
+
           {activeTab === 'storage' && (
             <section className="settings-section">
               <h3>Database Location</h3>

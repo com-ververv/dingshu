@@ -25,6 +25,38 @@ export interface SettingsAPI {
   getAll: () => Promise<IPCResponse<Record<string, string>>>;
 }
 
+export interface SecureSettingsStatus {
+  larkAppIdConfigured: boolean;
+  larkAppSecretConfigured: boolean;
+  larkAuth: {
+    configured: boolean;
+    profilePath: string;
+  };
+  safeStorageAvailable: boolean;
+  siliconflowApiKeyConfigured: boolean;
+}
+
+export interface SecureSettingsAPI {
+  getStatus: () => Promise<IPCResponse<SecureSettingsStatus>>;
+  saveCredentials: (credentials: {
+    larkAppId?: string;
+    larkAppSecret?: string;
+    siliconflowApiKey?: string;
+  }) => Promise<IPCResponse<void>>;
+  clearCredential: (key: 'larkAppId' | 'larkAppSecret' | 'siliconflowApiKey') => Promise<IPCResponse<void>>;
+}
+
+export interface LarkAuthStartResult {
+  deviceCode?: string;
+  userCode?: string;
+  verificationUrl?: string;
+}
+
+export interface LarkAuthAPI {
+  start: (scope?: string) => Promise<IPCResponse<LarkAuthStartResult>>;
+  complete: (deviceCode: string) => Promise<IPCResponse<void>>;
+}
+
 /**
  * Dialog API for native dialogs
  */
@@ -213,6 +245,8 @@ export interface ChatAPI {
  */
 export interface WindowAPI {
   settings: SettingsAPI;
+  secureSettings: SecureSettingsAPI;
+  larkAuth: LarkAuthAPI;
   dialog: DialogAPI;
   shell: ShellAPI;
   database: DatabaseAPI;

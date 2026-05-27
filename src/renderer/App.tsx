@@ -7,7 +7,7 @@ import { Bot, CheckCircle2, Copy, RotateCcw, Search, Send, Settings, Square, Use
 import { Toaster, toast } from 'sonner';
 import { Streamdown } from 'streamdown';
 import { Settings as SettingsModal } from './components/Settings';
-import type { ChatConversationSummary } from '../types/window';
+import type { ChatConversationSummary, SecureSettingsStatus } from '../types/window';
 
 type ChatMessage = {
   id: string;
@@ -154,6 +154,7 @@ export default function App() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ChatConversationSummary[]>([]);
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [secureStatus, setSecureStatus] = useState<SecureSettingsStatus | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
@@ -164,7 +165,7 @@ export default function App() {
   const streamingMessageIdRef = useRef<string | null>(null);
 
   const isStreaming = activeRequestId !== null;
-  const canSend = input.trim().length > 0 && !isStreaming;
+  const canSend = input.trim().length > 0 && !isStreaming && secureStatus?.siliconflowApiKeyConfigured !== false;
 
   const modelMessages = useMemo(() => getMessagesForModel(messages), [messages]);
 
@@ -238,6 +239,11 @@ export default function App() {
     window.api.app.getVersion().then((result) => {
       if (result.success && result.data) {
         setAppVersion(result.data);
+      }
+    });
+    window.api.secureSettings.getStatus().then((result) => {
+      if (result.success && result.data) {
+        setSecureStatus(result.data);
       }
     });
   }, []);
@@ -466,6 +472,11 @@ export default function App() {
     if (!trimmed || isStreaming) {
       return;
     }
+    if (secureStatus?.siliconflowApiKeyConfigured === false) {
+      toast.error('请先在设置面板保存 SiliconFlow API Key');
+      setShowSettings(true);
+      return;
+    }
 
     const requestId = createId('request');
     const userMessage: ChatMessage = {
@@ -640,6 +651,17 @@ export default function App() {
         </aside>
 
         <section className="chat-thread" aria-label="Chat messages">
+          {secureStatus?.siliconflowApiKeyConfigured === false ? (
+            <div className="config-warning">
+              <div>
+                <strong>缺少 SiliconFlow API Key</strong>
+                <span>请在设置面板保存后再开始聊天。</span>
+              </div>
+              <button type="button" className="primary-button" onClick={() => setShowSettings(true)}>
+                打开设置
+              </button>
+            </div>
+          ) : null}
           {messages.length === 0 ? (
             <div className="chat-empty">
               <div className="chat-empty-icon">
@@ -740,7 +762,18 @@ export default function App() {
 
       <footer className="app-footer">Version {appVersion || '-'}</footer>
 
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => {
+            setShowSettings(false);
+            window.api.secureSettings.getStatus().then((result) => {
+              if (result.success && result.data) {
+                setSecureStatus(result.data);
+              }
+            });
+          }}
+        />
+      )}
       <Toaster position="bottom-right" richColors />
     </div>
   );

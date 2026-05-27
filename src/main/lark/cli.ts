@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process';
+import { app } from 'electron';
+import fs from 'node:fs';
+import path from 'node:path';
 
 const DEFAULT_LARK_CLI_BIN = process.env.LARK_CLI_BIN ?? 'lark-cli';
 
@@ -11,6 +14,7 @@ export type LarkCliResult = {
 export type LarkCliOptions = {
   abortSignal?: AbortSignal;
   executable?: string;
+  stdin?: string;
   timeoutMs: number;
 };
 
@@ -20,16 +24,30 @@ export function getLarkCliBin(): string {
 
 export function runLarkCli(args: string[], options: LarkCliOptions): Promise<LarkCliResult> {
   const executable = options.executable ?? DEFAULT_LARK_CLI_BIN;
+  const larkHome = path.join(app.getPath('userData'), 'lark-cli-profile');
+  const larkWorkdir = path.join(app.getPath('userData'), 'lark-cli-workdir');
+  fs.mkdirSync(larkHome, { recursive: true });
+  fs.mkdirSync(larkWorkdir, { recursive: true });
 
   return new Promise((resolve, reject) => {
     const child = spawn(executable, args, {
       shell: false,
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: larkWorkdir,
       env: {
         ...process.env,
+        HOME: larkHome,
+        LARK_CLI_HOME: larkHome,
         NO_COLOR: '1',
+        USERPROFILE: larkHome,
       },
     });
+
+    if (options.stdin !== undefined) {
+      child.stdin.end(options.stdin);
+    } else {
+      child.stdin.end();
+    }
 
     let stdout = '';
     let stderr = '';

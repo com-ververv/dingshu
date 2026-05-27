@@ -10,6 +10,14 @@ import { autoUpdater } from 'electron-updater';
 import { getDatabase, closeDatabase, getCurrentDatabasePath } from '../database/connection';
 import { getDatabaseInfo, migrateDatabase, getDefaultDatabasePath, saveDatabaseConfig } from '../database/config';
 import { registerChatIPCHandlers } from './chat';
+import {
+  deleteSecureSetting,
+  hasSecureSetting,
+  isSecureStorageAvailable,
+  SECURE_SETTING_KEYS,
+  setSecureSetting,
+} from '../database/secureSettingsRepository';
+import { completeLarkUserAuth, configureLarkApp, getLarkAuthStatus, startLarkUserAuth } from '../main/lark/auth';
 
 /**
  * Register all IPC handlers
@@ -54,6 +62,87 @@ export function registerIPCHandlers(): void {
       return { success: true, data: settings };
     } catch (error) {
       return { success: false, error: { code: 'GET_ALL_SETTINGS_ERROR', message: String(error) } };
+    }
+  });
+
+  ipcMain.handle('secureSettings:getStatus', async () => {
+    try {
+      return {
+        success: true,
+        data: {
+          larkAppIdConfigured: hasSecureSetting(SECURE_SETTING_KEYS.larkAppId),
+          larkAppSecretConfigured: hasSecureSetting(SECURE_SETTING_KEYS.larkAppSecret),
+          larkAuth: getLarkAuthStatus(),
+          safeStorageAvailable: isSecureStorageAvailable(),
+          siliconflowApiKeyConfigured: hasSecureSetting(SECURE_SETTING_KEYS.siliconflowApiKey),
+        },
+      };
+    } catch (error) {
+      return { success: false, error: { code: 'GET_SECURE_SETTINGS_STATUS_ERROR', message: String(error) } };
+    }
+  });
+
+  ipcMain.handle(
+    'secureSettings:saveCredentials',
+    async (_, credentials: { larkAppId?: string; larkAppSecret?: string; siliconflowApiKey?: string }) => {
+      try {
+        if (!isSecureStorageAvailable()) {
+          return {
+            success: false,
+            error: {
+              code: 'SAFE_STORAGE_UNAVAILABLE',
+              message: '当前系统不可用 safeStorage，无法安全保存凭证。',
+            },
+          };
+        }
+
+        if (credentials.siliconflowApiKey?.trim()) {
+          setSecureSetting(SECURE_SETTING_KEYS.siliconflowApiKey, credentials.siliconflowApiKey.trim());
+        }
+        const trimmedLarkAppId = credentials.larkAppId?.trim();
+        const trimmedLarkAppSecret = credentials.larkAppSecret?.trim();
+
+        if (trimmedLarkAppId) {
+          setSecureSetting(SECURE_SETTING_KEYS.larkAppId, trimmedLarkAppId);
+        }
+        if (trimmedLarkAppSecret) {
+          setSecureSetting(SECURE_SETTING_KEYS.larkAppSecret, trimmedLarkAppSecret);
+        }
+        if (trimmedLarkAppId && trimmedLarkAppSecret) {
+          await configureLarkApp(trimmedLarkAppId, trimmedLarkAppSecret);
+        }
+
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: { code: 'SAVE_CREDENTIALS_ERROR', message: String(error) } };
+      }
+    }
+  );
+
+  ipcMain.handle('secureSettings:clearCredential', async (_, key: 'larkAppId' | 'larkAppSecret' | 'siliconflowApiKey') => {
+    try {
+      const settingKey = SECURE_SETTING_KEYS[key];
+      deleteSecureSetting(settingKey);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: { code: 'CLEAR_CREDENTIAL_ERROR', message: String(error) } };
+    }
+  });
+
+  ipcMain.handle('larkAuth:start', async (_, scope = 'docs,drive,im') => {
+    try {
+      return { success: true, data: await startLarkUserAuth(scope) };
+    } catch (error) {
+      return { success: false, error: { code: 'LARK_AUTH_START_ERROR', message: String(error) } };
+    }
+  });
+
+  ipcMain.handle('larkAuth:complete', async (_, deviceCode: string) => {
+    try {
+      await completeLarkUserAuth(deviceCode);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: { code: 'LARK_AUTH_COMPLETE_ERROR', message: String(error) } };
     }
   });
 

@@ -12,6 +12,7 @@ import {
   updateChatMessage,
   upsertToolEvent,
 } from '../database/chatRepository';
+import { getSecureSetting, SECURE_SETTING_KEYS } from '../database/secureSettingsRepository';
 
 type ChatSendRequest = {
   assistantMessageId?: string;
@@ -65,13 +66,13 @@ function getRecoverableError(error: unknown): { code: string; message: string; r
 async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendRequest) {
   console.log(`[Chat] send request=${request.requestId} messages=${request.messages.length}`);
 
-  const apiKey = process.env.SILICONFLOW_API_KEY;
+  const apiKey = getSecureSetting(SECURE_SETTING_KEYS.siliconflowApiKey) ?? process.env.SILICONFLOW_API_KEY;
   if (!apiKey) {
     return {
       success: false,
       error: {
         code: 'MISSING_SILICONFLOW_API_KEY',
-        message: '缺少 SILICONFLOW_API_KEY。请在项目根目录 .env 中配置后重启应用。',
+        message: '缺少 SiliconFlow API Key。请在设置面板保存 API Key 后再发送消息。',
       },
     };
   }

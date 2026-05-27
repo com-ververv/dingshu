@@ -57,6 +57,19 @@ const settingsAPI = {
   getAll: () => ipcRenderer.invoke('settings:getAll'),
 };
 
+const secureSettingsAPI = {
+  getStatus: () => ipcRenderer.invoke('secureSettings:getStatus'),
+  saveCredentials: (credentials: { larkAppId?: string; larkAppSecret?: string; siliconflowApiKey?: string }) =>
+    ipcRenderer.invoke('secureSettings:saveCredentials', credentials),
+  clearCredential: (key: 'larkAppId' | 'larkAppSecret' | 'siliconflowApiKey') =>
+    ipcRenderer.invoke('secureSettings:clearCredential', key),
+};
+
+const larkAuthAPI = {
+  start: (scope?: string) => ipcRenderer.invoke('larkAuth:start', scope),
+  complete: (deviceCode: string) => ipcRenderer.invoke('larkAuth:complete', deviceCode),
+};
+
 // Dialog API
 const dialogAPI = {
   showSaveDialog: (options?: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }) =>
@@ -146,6 +159,8 @@ const chatAPI = {
 // Expose APIs to renderer
 contextBridge.exposeInMainWorld('api', {
   settings: settingsAPI,
+  secureSettings: secureSettingsAPI,
+  larkAuth: larkAuthAPI,
   dialog: dialogAPI,
   shell: shellAPI,
   database: databaseAPI,

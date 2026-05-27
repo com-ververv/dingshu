@@ -232,6 +232,56 @@
   font-style: italic;
 }
 
+.credential-grid {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.credential-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  font-size: var(--text-sm);
+}
+
+.configured {
+  color: var(--color-success);
+}
+
+.not-configured {
+  color: var(--color-error);
+}
+
+.settings-action {
+  margin-top: var(--space-md);
+}
+
+.auth-section {
+  display: grid;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.auth-result {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.auth-result code {
+  display: block;
+  padding: var(--space-sm);
+  overflow-wrap: anywhere;
+  font-size: var(--text-xs);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
 /* Secondary button style */
 .btn-secondary {
   background-color: var(--color-bg-secondary);
