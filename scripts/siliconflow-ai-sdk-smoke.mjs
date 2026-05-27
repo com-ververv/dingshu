@@ -1,17 +1,20 @@
 #!/usr/bin/env node
-/* global console, process */
+/* global clearTimeout, console, process, setTimeout */
 
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, stepCountIs, streamText, tool } from 'ai';
+import { spawn } from 'node:child_process';
 import { z } from 'zod';
 
 const MODEL_ID = 'Pro/moonshotai/Kimi-K2.6';
 const BASE_URL = 'https://api.siliconflow.cn/v1';
+const LARK_CLI_BIN = process.env.LARK_CLI_BIN ?? 'lark-cli';
 const apiKey = process.env.SILICONFLOW_API_KEY;
 const mode = process.argv[2] ?? 'all';
 
 if (mode === '--help' || mode === '-h') {
-  console.log('Usage: SILICONFLOW_API_KEY=<key> npm run smoke:siliconflow -- [all|generate|stream|tool]');
+  console.log('Usage: SILICONFLOW_API_KEY=<key> npm run smoke:siliconflow -- [all|generate|stream|tool|lark]');
+  console.log('Optional: LARK_CLI_BIN=/path/to/lark-cli');
   process.exit(0);
 }
 
@@ -134,6 +137,113 @@ async function runToolSmoke() {
   console.log('elapsedMs:', Date.now() - startedAt);
 }
 
+async function runLarkCliSmoke() {
+  logSection('AI SDK tool -> lark-cli');
+
+  const startedAt = Date.now();
+  const larkCliTool = tool({
+    description: 'Run a safe lark-cli read-only smoke command. Use this to verify local lark-cli can be launched.',
+    inputSchema: z.object({
+      command: z.enum(['version', 'doctor_offline']).describe('Safe lark-cli command to run'),
+    }),
+    execute: async ({ command }) => {
+      const args = command === 'version' ? ['--version'] : ['doctor', '--offline'];
+      const result = await runLarkCli(args, {
+        timeoutMs: 15_000,
+      });
+
+      console.log(`tool:lark_cli_smoke command: ${command}`);
+      console.log(`tool:lark_cli_smoke exitCode: ${result.exitCode}`);
+
+      return {
+        command,
+        executable: LARK_CLI_BIN,
+        exitCode: result.exitCode,
+        stdout: truncate(result.stdout, 4_000),
+        stderr: truncate(result.stderr, 2_000),
+      };
+    },
+  });
+
+  const result = await generateText({
+    model,
+    system:
+      '你是本地集成测试助手。用户要求验证 lark-cli 时，必须调用 lark_cli_smoke 工具，然后用一句中文总结工具是否能启动。',
+    prompt: '验证本机 lark-cli 是否能启动。优先检查版本。',
+    temperature: 0,
+    maxOutputTokens: 256,
+    stopWhen: stepCountIs(3),
+    tools: {
+      lark_cli_smoke: larkCliTool,
+    },
+  });
+
+  console.log('text:', result.text.trim());
+  console.log('finishReason:', result.finishReason);
+  console.log('steps:', result.steps?.length ?? 0);
+  console.log('toolCalls:', JSON.stringify(collectToolCalls(result)));
+  printUsage(result.usage);
+  console.log('elapsedMs:', Date.now() - startedAt);
+}
+
+function runLarkCli(args, { timeoutMs }) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(LARK_CLI_BIN, args, {
+      shell: false,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        NO_COLOR: '1',
+      },
+    });
+
+    let stdout = '';
+    let stderr = '';
+    let settled = false;
+
+    const timeout = setTimeout(() => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      child.kill('SIGTERM');
+      reject(new Error(`lark-cli timed out after ${timeoutMs}ms: ${LARK_CLI_BIN} ${args.join(' ')}`));
+    }, timeoutMs);
+
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString('utf8');
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString('utf8');
+    });
+    child.on('error', (error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      reject(error);
+    });
+    child.on('close', (exitCode, signal) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      resolve({
+        exitCode,
+        signal,
+        stdout,
+        stderr,
+      });
+    });
+  });
+}
+
+function truncate(value, maxLength) {
+  return value.length > maxLength ? `${value.slice(0, maxLength)}...<truncated>` : value;
+}
+
 function collectToolCalls(result) {
   const calls = [];
   for (const step of result.steps ?? []) {
@@ -151,12 +261,16 @@ const modes = new Map([
   ['generate', runGenerateSmoke],
   ['stream', runStreamSmoke],
   ['tool', runToolSmoke],
+  ['lark', runLarkCliSmoke],
 ]);
 
 async function main() {
   console.log(`model: ${MODEL_ID}`);
   console.log(`baseURL: ${BASE_URL}`);
   console.log(`mode: ${mode}`);
+  if (mode === 'lark') {
+    console.log(`larkCliBin: ${LARK_CLI_BIN}`);
+  }
 
   if (mode === 'all') {
     for (const run of modes.values()) {
