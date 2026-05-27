@@ -101,6 +101,14 @@
 - slash command 不写入聊天消息。
 - `npm run lint`、`npx tsc --noEmit` 通过。
 
+执行记录：
+
+- 已按会话 ID 将草稿保存到 `localStorage`，切换会话和新建会话时自动恢复对应草稿。
+- 发送消息后会清理当前会话草稿。
+- 已支持 `/new`、`/clear`、`/settings`、`/auth`、`/search <关键词>`，命令只触发本地 UI 行为，不进入模型消息。
+- `/search` 会更新侧栏会话搜索；无关键词时聚焦搜索框。
+- 已通过 `npm run lint`、`npx tsc --noEmit`。
+
 ## 5. 阶段 17：工具调用组和长任务反馈
 
 目标：

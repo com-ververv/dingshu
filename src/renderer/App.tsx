@@ -51,6 +51,8 @@ const suggestedPrompts = [
   '给某人发送一条飞书消息',
 ];
 
+const DRAFT_PREFIX = 'pexar-lark-agent:draft:';
+
 function createId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
@@ -150,6 +152,10 @@ function getConfigItems(status: SecureSettingsStatus | null) {
   ];
 }
 
+function getDraftKey(conversationId: string | null): string {
+  return `${DRAFT_PREFIX}${conversationId ?? 'new'}`;
+}
+
 function ToolEventList({
   events,
   onApprove,
@@ -237,6 +243,7 @@ export default function App() {
   const [statusText, setStatusText] = useState('Ready');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const conversationSearchRef = useRef<HTMLInputElement | null>(null);
   const activeRequestIdRef = useRef<string | null>(null);
   const streamingMessageIdRef = useRef<string | null>(null);
 
@@ -290,6 +297,7 @@ export default function App() {
       return;
     }
     setConversationId(result.data.id);
+    setInput(localStorage.getItem(getDraftKey(result.data.id)) ?? '');
     setMessages(
       result.data.messages.map((message) => ({
         id: message.id,
@@ -310,7 +318,7 @@ export default function App() {
     }
     setConversationId(null);
     setMessages([]);
-    setInput('');
+    setInput(localStorage.getItem(getDraftKey(null)) ?? '');
     setStatusText('Ready');
   }
 
@@ -327,6 +335,7 @@ export default function App() {
     if (targetConversationId === conversationId) {
       setConversationId(null);
       setMessages([]);
+      setInput(localStorage.getItem(getDraftKey(null)) ?? '');
     }
     await refreshConversations(targetConversationId === conversationId ? undefined : conversationId ?? undefined);
   }
@@ -364,6 +373,7 @@ export default function App() {
             return;
           }
           setConversationId(conversationResult.data.id);
+          setInput(localStorage.getItem(getDraftKey(conversationResult.data.id)) ?? '');
           setMessages(
             conversationResult.data.messages.map((message) => ({
               id: message.id,
@@ -563,9 +573,40 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages]);
 
+  useEffect(() => {
+    localStorage.setItem(getDraftKey(conversationId), input);
+  }, [conversationId, input]);
+
+  function runSlashCommand(command: string): boolean {
+    const [name, ...rest] = command.trim().split(/\s+/);
+    const argument = rest.join(' ').trim();
+    if (name === '/new' || name === '/clear') {
+      const currentDraftKey = getDraftKey(conversationId);
+      startNewConversation();
+      localStorage.removeItem(currentDraftKey);
+      setInput('');
+      return true;
+    }
+    if (name === '/settings' || name === '/auth') {
+      setShowSettings(true);
+      setInput('');
+      return true;
+    }
+    if (name === '/search') {
+      setConversationSearch(argument);
+      setInput('');
+      window.setTimeout(() => conversationSearchRef.current?.focus(), 0);
+      return true;
+    }
+    return false;
+  }
+
   async function sendMessage(text: string) {
     const trimmed = text.trim();
     if (!trimmed || isStreaming) {
+      return;
+    }
+    if (trimmed.startsWith('/') && runSlashCommand(trimmed)) {
       return;
     }
     if (secureStatus?.siliconflowApiKeyConfigured === false) {
@@ -591,6 +632,7 @@ export default function App() {
     const nextMessages = [...messages, userMessage, assistantMessage];
     setMessages(nextMessages);
     setInput('');
+    localStorage.removeItem(getDraftKey(conversationId));
     activeRequestIdRef.current = requestId;
     streamingMessageIdRef.current = assistantMessage.id;
     setActiveRequestId(requestId);
@@ -720,6 +762,7 @@ export default function App() {
           <div className="sidebar-search">
             <Search size={14} />
             <input
+              ref={conversationSearchRef}
               value={conversationSearch}
               onChange={(event) => setConversationSearch(event.target.value)}
               placeholder="搜索会话"
