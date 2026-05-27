@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* global clearTimeout, console, process, setTimeout */
 
+import 'dotenv/config';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { generateText, stepCountIs, streamText, tool } from 'ai';
 import { spawn } from 'node:child_process';
@@ -13,13 +14,14 @@ const apiKey = process.env.SILICONFLOW_API_KEY;
 const mode = process.argv[2] ?? 'all';
 
 if (mode === '--help' || mode === '-h') {
-  console.log('Usage: SILICONFLOW_API_KEY=<key> npm run smoke:siliconflow -- [all|generate|stream|tool|lark]');
+  console.log('Usage: npm run smoke:siliconflow -- [all|generate|stream|tool|lark]');
+  console.log('Reads SILICONFLOW_API_KEY from .env or the current shell environment.');
   console.log('Optional: LARK_CLI_BIN=/path/to/lark-cli');
   process.exit(0);
 }
 
 if (!apiKey) {
-  console.error('Missing SILICONFLOW_API_KEY. Example: SILICONFLOW_API_KEY=<key> npm run smoke:siliconflow');
+  console.error('Missing SILICONFLOW_API_KEY. Add it to .env or export it in the current shell.');
   process.exit(1);
 }
 

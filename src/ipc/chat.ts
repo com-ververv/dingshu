@@ -57,7 +57,7 @@ async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendReques
       success: false,
       error: {
         code: 'MISSING_SILICONFLOW_API_KEY',
-        message: '缺少 SILICONFLOW_API_KEY。请用环境变量启动应用后重试。',
+        message: '缺少 SILICONFLOW_API_KEY。请在项目根目录 .env 中配置后重启应用。',
       },
     };
   }
