@@ -18,24 +18,6 @@ export type StreamChatOptions = {
   requestId: string;
 };
 
-function getLastUserText(messages: ChatMessage[]): string {
-  return [...messages].reverse().find((message) => message.role === 'user')?.content ?? '';
-}
-
-function getToolChoice(messages: ChatMessage[]) {
-  const lastUserText = getLastUserText(messages);
-  if (/(创建|新建|生成|保存).*(飞书|云文档|文档)|把.+(创建|新建|生成|保存).*(飞书|云文档|文档)/.test(lastUserText)) {
-    return 'required' as const;
-  }
-  if (/(读取|打开|总结|分析).*(https?:\/\/|docx\/|docs\/|wiki\/|飞书链接|文档链接|这篇|第一篇|第一条|文档内容)/.test(lastUserText)) {
-    return { type: 'tool' as const, toolName: 'lark_doc_read' as const };
-  }
-  if (/(查看|查找|搜索|找).*(飞书|云文档|文档|资料|测试)/.test(lastUserText)) {
-    return { type: 'tool' as const, toolName: 'lark_doc_search' as const };
-  }
-  return 'auto' as const;
-}
-
 export function streamChat(options: StreamChatOptions) {
   const siliconflow = createSiliconFlowProvider(options.apiKey);
 
@@ -47,7 +29,7 @@ export function streamChat(options: StreamChatOptions) {
     temperature: 0.4,
     maxOutputTokens: 2048,
     stopWhen: stepCountIs(4),
-    toolChoice: getToolChoice(options.messages),
+    toolChoice: 'auto',
     tools: {
       lark_doc_create: createLarkDocCreateTool(options.requestId, options.emitToolEvent),
       lark_doc_read: createLarkDocReadTool(options.requestId, options.emitToolEvent),
