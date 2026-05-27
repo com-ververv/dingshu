@@ -151,6 +151,14 @@
 - “总结研发群今天的讨论”能查询并总结。
 - 找不到群、无权限、无结果时有明确提示。
 
+执行记录：
+
+- 已实现 `lark_message_search` 只读工具，支持关键词、群名解析、开始/结束时间和结果条数限制。
+- 已接入 ChatService，消息查询/群消息总结意图可由 Kimi-K2.6 触发工具调用。
+- 已验证 `lark-cli im +chat-search` 可按群名搜索，`lark-cli im +messages-search` 可查询关键词消息。
+- 已完成 AI SDK 工具调用 E2E：模型调用 `lark_message_search` 查询“测试”相关最近 3 条飞书消息并基于真实结果总结。
+- 已通过 `npm run lint`、`npx tsc --noEmit`、`npm run package`。
+
 ## 阶段 7：消息发送
 
 目标：
