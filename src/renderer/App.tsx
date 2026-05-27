@@ -1213,7 +1213,9 @@ export default function App() {
           </div>
         </div>
         <div className="header-right">
-          <span className={`chat-status ${isStreaming ? 'is-active' : ''}`}>{statusText}</span>
+          <span className={`chat-status ${isStreaming ? 'is-active' : ''}`} data-testid="chat-status">
+            {statusText}
+          </span>
           <button onClick={() => setShowSettings(true)} className="settings-button" type="button">
             <Settings size={18} />
             <span>Settings</span>
@@ -1225,7 +1227,13 @@ export default function App() {
         <aside className="conversation-sidebar" aria-label="Conversation history">
           <div className="conversation-sidebar-header">
             <span>会话</span>
-            <button type="button" onClick={startNewConversation} disabled={isStreaming}>
+            <button
+              type="button"
+              onClick={startNewConversation}
+              disabled={isStreaming}
+              aria-label="新建会话"
+              data-testid="new-conversation-button"
+            >
               新建
             </button>
           </div>
@@ -1257,7 +1265,9 @@ export default function App() {
           </div>
           <div className="conversation-list">
             {conversations.length === 0 ? (
-              <p className="conversation-empty">暂无历史会话</p>
+              <p className="conversation-empty" data-testid="conversation-empty">
+                暂无历史会话
+              </p>
             ) : filteredConversationGroups.length === 0 ? (
               <p className="conversation-empty">没有匹配的会话</p>
             ) : (
@@ -1315,7 +1325,7 @@ export default function App() {
           </div>
         </aside>
 
-        <section className="chat-thread" aria-label="Chat messages">
+        <section className="chat-thread" aria-label="Chat messages" data-testid="chat-thread">
           {secureStatus?.siliconflowApiKeyConfigured === false ? (
             <div className="config-warning">
               <div>
@@ -1328,7 +1338,7 @@ export default function App() {
             </div>
           ) : null}
           {messages.length === 0 ? (
-            <div className="chat-empty">
+            <div className="chat-empty" data-testid="chat-empty-state">
               <div className="chat-empty-icon">
                 <Bot size={28} />
               </div>
@@ -1343,9 +1353,13 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <div className="message-list">
+            <div className="message-list" data-testid="message-list">
               {messages.map((message) => (
-                <article key={message.id} className={`chat-message is-${message.role}`}>
+                <article
+                  key={message.id}
+                  className={`chat-message is-${message.role}`}
+                  data-testid={`chat-message-${message.role}`}
+                >
                   <div className="message-avatar" aria-hidden="true">
                     {message.role === 'user' ? <UserRound size={16} /> : <Bot size={16} />}
                   </div>
@@ -1408,6 +1422,8 @@ export default function App() {
             onClick={(event) => setMentionQuery(findMentionQuery(input, event.currentTarget.selectionStart))}
             onKeyDown={handleKeyDown}
             placeholder="输入消息，@ 选择飞书对象，Enter 发送"
+            aria-label="消息输入框"
+            data-testid="chat-input"
             rows={1}
             disabled={isStreaming}
           />
@@ -1428,7 +1444,13 @@ export default function App() {
                 <span>停止</span>
               </button>
             ) : (
-              <button type="submit" className="primary-button" disabled={!canSend}>
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={!canSend}
+                aria-label="发送消息"
+                data-testid="send-message-button"
+              >
                 <Send size={15} />
                 <span>发送</span>
               </button>
