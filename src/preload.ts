@@ -9,6 +9,11 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 
+type ChatStreamEvent =
+  | { requestId: string; type: 'delta'; textDelta: string }
+  | { requestId: string; type: 'done'; finishReason?: string; usage?: unknown }
+  | { requestId: string; type: 'error'; error: { code: string; message: string; recoverable: boolean } };
+
 // Settings API
 const settingsAPI = {
   get: (key: string) => ipcRenderer.invoke('settings:get', key),
@@ -54,6 +59,29 @@ const appAPI = {
   },
 };
 
+// Chat API
+const chatAPI = {
+  send: (request: {
+    requestId: string;
+    messages: { role: 'user' | 'assistant' | 'system'; content: string }[];
+  }) => ipcRenderer.invoke('chat:send', request),
+  stop: (requestId: string) => ipcRenderer.invoke('chat:stop', requestId),
+  onDelta: (callback: (event: Extract<ChatStreamEvent, { type: 'delta' }>) => void) => {
+    ipcRenderer.on('chat:delta', (_, event) => callback(event));
+  },
+  onDone: (callback: (event: Extract<ChatStreamEvent, { type: 'done' }>) => void) => {
+    ipcRenderer.on('chat:done', (_, event) => callback(event));
+  },
+  onError: (callback: (event: Extract<ChatStreamEvent, { type: 'error' }>) => void) => {
+    ipcRenderer.on('chat:error', (_, event) => callback(event));
+  },
+  removeStreamListeners: () => {
+    ipcRenderer.removeAllListeners('chat:delta');
+    ipcRenderer.removeAllListeners('chat:done');
+    ipcRenderer.removeAllListeners('chat:error');
+  },
+};
+
 // Expose APIs to renderer
 contextBridge.exposeInMainWorld('api', {
   settings: settingsAPI,
@@ -61,6 +89,7 @@ contextBridge.exposeInMainWorld('api', {
   shell: shellAPI,
   database: databaseAPI,
   app: appAPI,
+  chat: chatAPI,
 });
 
 // Add your own APIs below:

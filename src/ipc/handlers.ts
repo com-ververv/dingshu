@@ -9,11 +9,14 @@ import { ipcMain, dialog, shell, app } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { getDatabase, closeDatabase, getCurrentDatabasePath } from '../database/connection';
 import { getDatabaseInfo, migrateDatabase, getDefaultDatabasePath, saveDatabaseConfig } from '../database/config';
+import { registerChatIPCHandlers } from './chat';
 
 /**
  * Register all IPC handlers
  */
 export function registerIPCHandlers(): void {
+  registerChatIPCHandlers();
+
   // ============= Settings =============
 
   ipcMain.handle('settings:get', async (_, key: string) => {

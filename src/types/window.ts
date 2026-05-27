@@ -79,6 +79,43 @@ export interface AppAPI {
   removeUpdateListeners: () => void;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface ChatDeltaEvent {
+  requestId: string;
+  type: 'delta';
+  textDelta: string;
+}
+
+export interface ChatDoneEvent {
+  requestId: string;
+  type: 'done';
+  finishReason?: string;
+  usage?: unknown;
+}
+
+export interface ChatErrorEvent {
+  requestId: string;
+  type: 'error';
+  error: {
+    code: string;
+    message: string;
+    recoverable: boolean;
+  };
+}
+
+export interface ChatAPI {
+  send: (request: { requestId: string; messages: ChatMessage[] }) => Promise<IPCResponse<void>>;
+  stop: (requestId: string) => Promise<IPCResponse<void>>;
+  onDelta: (callback: (event: ChatDeltaEvent) => void) => void;
+  onDone: (callback: (event: ChatDoneEvent) => void) => void;
+  onError: (callback: (event: ChatErrorEvent) => void) => void;
+  removeStreamListeners: () => void;
+}
+
 /**
  * Main window API interface
  */
@@ -88,6 +125,7 @@ export interface WindowAPI {
   shell: ShellAPI;
   database: DatabaseAPI;
   app: AppAPI;
+  chat: ChatAPI;
 }
 
 declare global {
