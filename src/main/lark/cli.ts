@@ -14,6 +14,7 @@ export type LarkCliResult = {
 export type LarkCliOptions = {
   abortSignal?: AbortSignal;
   executable?: string;
+  isolatedProfile?: boolean;
   stdin?: string;
   timeoutMs: number;
 };
@@ -26,8 +27,11 @@ export function runLarkCli(args: string[], options: LarkCliOptions): Promise<Lar
   const executable = options.executable ?? DEFAULT_LARK_CLI_BIN;
   const larkHome = path.join(app.getPath('userData'), 'lark-cli-profile');
   const larkWorkdir = path.join(app.getPath('userData'), 'lark-cli-workdir');
-  fs.mkdirSync(larkHome, { recursive: true });
   fs.mkdirSync(larkWorkdir, { recursive: true });
+  const shouldUseIsolatedProfile = options.isolatedProfile === true || fs.existsSync(path.join(larkHome, '.lark-cli'));
+  if (shouldUseIsolatedProfile) {
+    fs.mkdirSync(larkHome, { recursive: true });
+  }
 
   return new Promise((resolve, reject) => {
     const child = spawn(executable, args, {
@@ -36,10 +40,14 @@ export function runLarkCli(args: string[], options: LarkCliOptions): Promise<Lar
       cwd: larkWorkdir,
       env: {
         ...process.env,
-        HOME: larkHome,
-        LARK_CLI_HOME: larkHome,
+        ...(shouldUseIsolatedProfile
+          ? {
+              HOME: larkHome,
+              LARK_CLI_HOME: larkHome,
+              USERPROFILE: larkHome,
+            }
+          : {}),
         NO_COLOR: '1',
-        USERPROFILE: larkHome,
       },
     });
 

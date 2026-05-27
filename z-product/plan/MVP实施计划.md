@@ -177,6 +177,15 @@
 - 拒绝后不发送。
 - 错误时不伪造成功。
 
+执行记录：
+
+- 已实现 `lark_message_send` 写工具，支持按群名解析 `chat_id`、text/markdown 消息、bot/user 身份、幂等键和二次确认。
+- 已接入 ChatService 和工具事件 UI，发送工具会显示“发送飞书消息”审批卡片。
+- 已完成 AI SDK stub E2E：Kimi-K2.6 能触发 `lark_message_send`，拒绝时不会实际发送，并能说明未执行。
+- 已验证错误路径：目标业务群未加入 bot 时返回 `Bot/User can NOT be out of the chat`，不会伪造成功。
+- 已完成真实发送验收：创建私有测试群 `Codex MVP Stage7 Test 20260528-002046`，bot 发送消息成功，`chat_id = oc_891d7f4bd02f93e40017650692723a0f`，`message_id = om_x100b6e45d0ca40a0b21dbb2157c8208`。
+- 已通过 `npm run lint`、`npx tsc --noEmit`、`npm run package`。
+
 ## 阶段 8：内置 lark-cli 与打包资源
 
 目标：

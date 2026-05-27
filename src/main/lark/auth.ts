@@ -58,6 +58,7 @@ export async function startLarkUserAuth(domain: string): Promise<{
   const result = await runLarkCli(
     ['auth', 'login', '--domain', domain, '--no-wait', '--json'],
     {
+      isolatedProfile: true,
       timeoutMs: 30_000,
     }
   );
@@ -71,6 +72,7 @@ export async function startLarkUserAuth(domain: string): Promise<{
 
 export async function configureLarkApp(appId: string, appSecret: string): Promise<void> {
   const result = await runLarkCli(['config', 'init', '--brand', 'feishu', '--app-id', appId, '--app-secret-stdin'], {
+    isolatedProfile: true,
     stdin: appSecret,
     timeoutMs: 30_000,
   });
@@ -82,6 +84,7 @@ export async function configureLarkApp(appId: string, appSecret: string): Promis
 
 export async function completeLarkUserAuth(deviceCode: string): Promise<void> {
   const result = await runLarkCli(['auth', 'login', '--device-code', deviceCode], {
+    isolatedProfile: true,
     timeoutMs: LARK_AUTH_TIMEOUT_MS,
   });
 

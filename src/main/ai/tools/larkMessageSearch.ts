@@ -3,20 +3,12 @@ import type { ToolExecutionOptions } from 'ai';
 import { z } from 'zod';
 import { previewJson, type ChatToolEventSink } from '../events';
 import { getLarkCliBin, runLarkCli } from '../../lark/cli';
+import { resolveLarkChatByName } from '../../lark/chat';
 
 const TOOL_NAME = 'lark_message_search';
 const LARK_MESSAGE_SEARCH_TIMEOUT_MS = 45_000;
 const MAX_MESSAGE_RESULTS = 20;
 const MAX_CONTENT_LENGTH = 1_500;
-
-type LarkChatSearchOutput = {
-  data?: {
-    chats?: {
-      chat_id?: string;
-      name?: string;
-    }[];
-  };
-};
 
 type LarkMessageSearchOutput = {
   data?: {
@@ -52,38 +44,6 @@ function clampPageSize(pageSize?: number): number {
   return Math.min(Math.max(pageSize, 1), MAX_MESSAGE_RESULTS);
 }
 
-async function resolveChatId(chatName: string, abortSignal?: AbortSignal) {
-  const result = await runLarkCli(
-    ['im', '+chat-search', '--as', 'user', '--query', chatName, '--page-size', '3', '--format', 'json'],
-    {
-      timeoutMs: LARK_MESSAGE_SEARCH_TIMEOUT_MS,
-      abortSignal,
-    }
-  );
-
-  if (result.exitCode !== 0) {
-    return {
-      ok: false as const,
-      error: result.stderr || result.stdout || 'lark-cli chat search failed without output',
-    };
-  }
-
-  const parsed = parseJson<LarkChatSearchOutput>(result.stdout);
-  const firstChat = parsed.data?.chats?.[0];
-  if (!firstChat?.chat_id) {
-    return {
-      ok: false as const,
-      error: `未找到群聊：${chatName}`,
-    };
-  }
-
-  return {
-    ok: true as const,
-    chatId: firstChat.chat_id,
-    chatName: firstChat.name ?? chatName,
-  };
-}
-
 export function createLarkMessageSearchTool(requestId: string, emitToolEvent: ChatToolEventSink) {
   return tool({
     description:
@@ -111,7 +71,7 @@ export function createLarkMessageSearchTool(requestId: string, emitToolEvent: Ch
       try {
         let resolvedChat: { chatId?: string; chatName?: string } = {};
         if (chatName?.trim()) {
-          const chatResult = await resolveChatId(chatName.trim(), options.abortSignal);
+          const chatResult = await resolveLarkChatByName(chatName.trim(), options.abortSignal);
           if (!chatResult.ok) {
             const output = {
               ok: false,

@@ -65,6 +65,9 @@ function getToolLabel(toolName: string): string {
   if (toolName === 'lark_message_search') {
     return '查询飞书消息';
   }
+  if (toolName === 'lark_message_send') {
+    return '发送飞书消息';
+  }
   return toolName;
 }
 
