@@ -168,3 +168,11 @@
 - package 成功。
 - SiliconFlow smoke 成功。
 - Git 提交阶段结果。
+
+执行记录：
+
+- 已通过 `npm run lint`。
+- 已通过 `npx tsc --noEmit`。
+- 已通过 `npm run smoke:siliconflow -- generate`。
+- 已通过 `npm run package`。
+- 已执行 `npm run dev`，Electron 应用启动成功，主进程初始化数据库和 IPC 正常，未观察到启动错误；验证后已关闭 dev session。
