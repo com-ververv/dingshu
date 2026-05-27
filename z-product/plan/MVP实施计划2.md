@@ -212,6 +212,15 @@ MVP 不开放：
 - 表格读取 / 查找可用。
 - 文件下载只能写入应用工作目录或用户明确选择的路径。
 
+执行记录：
+
+- 已登记文件、表格和 Base 能力：`drive_upload`、`drive_download`、`drive_import`、`drive_export_download`、`sheets_create`、`sheets_create_sheet`、`sheets_export`、`base_table_list`、`base_field_list`、`base_record_search`、`base_record_list`、`base_data_query`、`base_record_upsert`。
+- 本地文件上传、导入、下载、导出下载、表格导出统一标记为 `risk = write`，需要审批；后续 UI 文件选择完成前，真实执行必须由用户明确确认路径。
+- Base 读取能力标记为只读；`base_record_upsert` 标记为写入并需要审批。
+- 已新增单测覆盖文件/Base 能力风险等级、Base 查询参数构造和越权文件路径 flag 拒绝。
+- 已通过 `npm run test -- --run src/main/ai/tools/larkCliShortcut.test.ts`、`npm run lint`、`npx tsc --noEmit`。
+- 已用 `--dry-run` 验证 `drive +upload`、`sheets +create`、`base +record-list`、`base +record-upsert` 参数构造，均只输出 dry-run 请求，不产生副作用。
+
 ## 6. 阶段 13：能力发现、错误提示与测试矩阵
 
 目标：

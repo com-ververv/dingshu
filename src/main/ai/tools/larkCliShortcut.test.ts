@@ -46,4 +46,27 @@ describe('lark_cli_shortcut', () => {
       'capability does not allow flag --confirm-send'
     );
   });
+
+  it('registers file and base capabilities with conservative risk levels', () => {
+    expect(getLarkCapability('drive_upload')?.risk).toBe('write');
+    expect(getLarkCapability('drive_download')?.risk).toBe('write');
+    expect(getLarkCapability('base_record_list')?.risk).toBe('read');
+    expect(getLarkCapability('base_record_upsert')?.risk).toBe('write');
+  });
+
+  it('builds Base query flags and rejects unrelated file paths', () => {
+    const baseQuery = getLarkCapability('base_data_query');
+    expect(
+      buildLarkShortcutFlagArgs(
+        {
+          'base-token': 'bascn_xxx',
+          dsl: '{"table":"tbl_xxx"}',
+        },
+        baseQuery?.allowedFlags ?? []
+      )
+    ).toEqual(['--base-token', 'bascn_xxx', '--dsl', '{"table":"tbl_xxx"}']);
+    expect(() => buildLarkShortcutFlagArgs({ file: '/tmp/a.csv' }, baseQuery?.allowedFlags ?? [])).toThrow(
+      'capability does not allow flag --file'
+    );
+  });
 });
