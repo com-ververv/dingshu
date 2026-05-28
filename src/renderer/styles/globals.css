@@ -2488,8 +2488,8 @@ body {
 }
 
 .tool-event-list {
-  gap: 7px;
-  margin: 0 0 12px;
+  gap: 2px;
+  margin: 0 0 10px;
 }
 
 .tool-event-summary {
@@ -2507,14 +2507,15 @@ body {
 
 .tool-event {
   overflow: hidden;
-  background: #fbfbfb;
-  border-color: #e8ecee;
-  border-radius: 12px;
+  background: transparent;
+  border-color: transparent;
+  border-bottom-color: #edf0f1;
+  border-radius: 0;
 }
 
 .tool-event summary {
-  min-height: 31px;
-  padding: 6px 9px;
+  min-height: 28px;
+  padding: 5px 2px;
   color: #626a70;
   font-size: 13px;
 }
