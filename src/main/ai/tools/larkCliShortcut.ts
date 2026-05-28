@@ -138,6 +138,41 @@ function extractArgsObjectAfterLabel(text: string): ShortcutArgs | undefined {
   }
 }
 
+function extractQuotedText(text: string): string | undefined {
+  const match = /[「“"']([^」”"']{1,80})[」”"']/.exec(text);
+  return match?.[1]?.trim();
+}
+
+function extractContactSearchQuery(reason: string): string | undefined {
+  const quoted = extractQuotedText(reason);
+  if (quoted) {
+    return quoted;
+  }
+
+  const patterns = [
+    /(?:查询|查找|搜索)\s*(?:用户|联系人|同事)?\s*([^\s，。,.、]{1,40})\s*(?:的)?\s*(?:邮箱|邮件|email|Email|EMAIL)/,
+    /(?:邮箱|邮件|email|Email|EMAIL).*?(?:用户|联系人|同事)?\s*([^\s，。,.、]{1,40})/,
+  ];
+  for (const pattern of patterns) {
+    const match = pattern.exec(reason);
+    const query = match?.[1]?.trim();
+    if (query) {
+      return query;
+    }
+  }
+
+  return undefined;
+}
+
+function inferShortcutArgsFromReason(capabilityId: string, reason: string): ShortcutArgs | undefined {
+  if (capabilityId === 'contact_search_user') {
+    const query = extractContactSearchQuery(reason);
+    return query ? { query } : undefined;
+  }
+
+  return undefined;
+}
+
 export function normalizeLarkShortcutArgs(
   args: ShortcutArgs,
   capabilityId: string,
@@ -160,6 +195,11 @@ export function normalizeLarkShortcutArgs(
     if (recoveredArgs) {
       return { args: recoveredArgs, recoveredFromReason: true };
     }
+  }
+
+  const inferredArgs = inferShortcutArgsFromReason(capabilityId, reason);
+  if (inferredArgs) {
+    return { args: inferredArgs, recoveredFromReason: true };
   }
 
   return { args, recoveredFromReason: false };

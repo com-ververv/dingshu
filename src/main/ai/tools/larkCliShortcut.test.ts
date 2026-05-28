@@ -50,6 +50,29 @@ describe('lark_cli_shortcut', () => {
     });
   });
 
+  it('infers contact search query from a natural-language reason', () => {
+    const normalized = normalizeLarkShortcutArgs({}, 'contact_search_user', '查询用户「艺彪」的邮箱信息');
+
+    expect(normalized).toEqual({
+      args: {
+        query: '艺彪',
+      },
+      recoveredFromReason: true,
+    });
+    expect(buildLarkShortcutFlagArgs(normalized.args, ['query'])).toEqual(['--query', '艺彪']);
+  });
+
+  it('infers contact search query from unquoted email lookup text', () => {
+    const normalized = normalizeLarkShortcutArgs({}, 'contact_search_user', '查询 艺彪 的邮箱');
+
+    expect(normalized).toEqual({
+      args: {
+        query: '艺彪',
+      },
+      recoveredFromReason: true,
+    });
+  });
+
   it('keeps boolean true flags and skips false flags', () => {
     expect(buildLarkShortcutFlagArgs({ 'page-all': true, mine: false }, ['page-all', 'mine'])).toEqual(['--page-all']);
   });
