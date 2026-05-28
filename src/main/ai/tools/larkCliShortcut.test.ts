@@ -50,6 +50,28 @@ describe('lark_cli_shortcut', () => {
     });
   });
 
+  it('infers chat message list args from a natural-language reason', () => {
+    const normalized = normalizeLarkShortcutArgs(
+      {},
+      'im_chat_messages_list',
+      '用户要求查看指定群聊（oc_3de1e37bfc274d931e01c46a8202dc36）最近 2 小时的消息，需要读取该群的消息列表并按时间筛选。'
+    );
+
+    expect(normalized).toEqual({
+      args: {
+        'chat-id': 'oc_3de1e37bfc274d931e01c46a8202dc36',
+        'page-size': 20,
+      },
+      recoveredFromReason: true,
+    });
+    expect(buildLarkShortcutFlagArgs(normalized.args, ['chat-id', 'page-size'])).toEqual([
+      '--chat-id',
+      'oc_3de1e37bfc274d931e01c46a8202dc36',
+      '--page-size',
+      '20',
+    ]);
+  });
+
   it('infers contact search query from a natural-language reason', () => {
     const normalized = normalizeLarkShortcutArgs({}, 'contact_search_user', '查询用户「艺彪」的邮箱信息');
 

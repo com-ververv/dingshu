@@ -164,10 +164,19 @@ function extractContactSearchQuery(reason: string): string | undefined {
   return undefined;
 }
 
+function extractChatId(reason: string): string | undefined {
+  return /\boc_[A-Za-z0-9]+\b/.exec(reason)?.[0];
+}
+
 function inferShortcutArgsFromReason(capabilityId: string, reason: string): ShortcutArgs | undefined {
   if (capabilityId === 'contact_search_user') {
     const query = extractContactSearchQuery(reason);
     return query ? { query } : undefined;
+  }
+
+  if (capabilityId === 'im_chat_messages_list') {
+    const chatId = extractChatId(reason);
+    return chatId ? { 'chat-id': chatId, 'page-size': 20 } : undefined;
   }
 
   return undefined;
