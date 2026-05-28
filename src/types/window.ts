@@ -149,6 +149,7 @@ export interface DatabaseAPI {
  */
 export interface AppAPI {
   getVersion: () => Promise<IPCResponse<string>>;
+  getGitDiffStats: () => Promise<IPCResponse<{ additions: number; deletions: number }>>;
   quitAndInstall: () => Promise<IPCResponse<void>>;
   onUpdateAvailable: (callback: (version: string) => void) => void;
   onUpdateDownloaded: (callback: (version: string) => void) => void;

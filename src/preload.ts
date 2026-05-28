@@ -105,6 +105,7 @@ const databaseAPI = {
 // App API
 const appAPI = {
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
+  getGitDiffStats: () => ipcRenderer.invoke('app:getGitDiffStats'),
   quitAndInstall: () => ipcRenderer.invoke('app:quitAndInstall'),
   onUpdateAvailable: (callback: (version: string) => void) => {
     ipcRenderer.on('update:available', (_, version) => callback(version));

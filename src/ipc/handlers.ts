@@ -6,6 +6,8 @@
  */
 
 import { ipcMain, dialog, shell, app } from 'electron';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { autoUpdater } from 'electron-updater';
 import { getDatabase, closeDatabase, getCurrentDatabasePath } from '../database/connection';
 import { getDatabaseInfo, migrateDatabase, getDefaultDatabasePath, saveDatabaseConfig } from '../database/config';
@@ -21,6 +23,8 @@ import { completeLarkUserAuth, configureLarkApp, getLarkAuthStatus, startLarkUse
 import { verifyBundledLarkCli } from '../main/lark/cli';
 import { listLarkCapabilities } from '../main/lark/capabilities';
 import { searchLarkObjects, type LarkObjectSearchRequest } from '../main/lark/objectSearch';
+
+const execFileAsync = promisify(execFile);
 
 /**
  * Register all IPC handlers
@@ -334,6 +338,28 @@ export function registerIPCHandlers(): void {
 
   ipcMain.handle('app:getVersion', () => {
     return { success: true, data: app.getVersion() };
+  });
+
+  ipcMain.handle('app:getGitDiffStats', async () => {
+    try {
+      const { stdout } = await execFileAsync('git', ['diff', '--numstat', 'HEAD'], {
+        cwd: process.cwd(),
+        timeout: 5000,
+      });
+      let additions = 0;
+      let deletions = 0;
+      for (const line of stdout.trim().split('\n')) {
+        if (!line) {
+          continue;
+        }
+        const [added, deleted] = line.split('\t');
+        additions += Number.parseInt(added, 10) || 0;
+        deletions += Number.parseInt(deleted, 10) || 0;
+      }
+      return { success: true, data: { additions, deletions } };
+    } catch (error) {
+      return { success: false, error: { code: 'GET_GIT_DIFF_STATS_ERROR', message: String(error) } };
+    }
   });
 
   ipcMain.handle('app:quitAndInstall', () => {
