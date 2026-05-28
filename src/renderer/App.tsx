@@ -2,7 +2,7 @@
  * Pexar Lark Agent - Chatbot UI
  */
 
-import React, { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FormEvent, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
   Bot,
@@ -232,6 +232,12 @@ function getString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
+function getExternalLinkFromClick(event: MouseEvent<HTMLElement>): string | undefined {
+  const link = (event.target as HTMLElement).closest('a[href]');
+  const href = link?.getAttribute('href')?.trim();
+  return href && /^https?:\/\//i.test(href) ? href : undefined;
+}
+
 function deriveArtifacts(messages: ChatMessage[]): Artifact[] {
   const artifacts = new Map<string, Artifact>();
   for (const message of messages) {
@@ -398,12 +404,14 @@ function ArtifactPanel({
   artifacts,
   collapsed,
   onCopy,
+  onLinkClick,
   onOpen,
   onToggle,
 }: {
   artifacts: Artifact[];
   collapsed: boolean;
   onCopy: (content: string, label: string) => void;
+  onLinkClick: (event: MouseEvent<HTMLElement>) => void;
   onOpen: (url: string) => void;
   onToggle: () => void;
 }) {
@@ -448,8 +456,8 @@ function ArtifactPanel({
                 </div>
               </div>
               {artifact.contentPreview ? (
-                <div className="artifact-preview">
-                  <Streamdown className="markdown-content" mode="streaming" controls={false}>
+                <div className="artifact-preview" onClick={onLinkClick}>
+                  <Streamdown className="markdown-content" mode="streaming" controls={false} linkSafety={{ enabled: false }}>
                     {artifact.contentPreview}
                   </Streamdown>
                 </div>
@@ -1192,6 +1200,15 @@ export default function App() {
     void window.api.shell.openExternal(url);
   }
 
+  function openMarkdownLink(event: MouseEvent<HTMLElement>) {
+    const href = getExternalLinkFromClick(event);
+    if (!href) {
+      return;
+    }
+    event.preventDefault();
+    openExternal(href);
+  }
+
   async function approveToolCall(approvalId: string) {
     const result = await window.api.chat.approveToolCall(approvalId);
     if (!result.success) {
@@ -1376,7 +1393,7 @@ export default function App() {
                         <span className={`message-state is-${message.status}`}>{getMessageStatusLabel(message.status)}</span>
                       ) : null}
                     </div>
-                    <div className="message-content">
+                    <div className="message-content" onClick={openMarkdownLink}>
                       {message.role === 'assistant' && message.toolEvents ? (
                         <ToolEventList
                           events={message.toolEvents}
@@ -1385,7 +1402,7 @@ export default function App() {
                         />
                       ) : null}
                       {message.content && message.role === 'assistant' ? (
-                        <Streamdown className="markdown-content" mode="streaming" controls={false}>
+                        <Streamdown className="markdown-content" mode="streaming" controls={false} linkSafety={{ enabled: false }}>
                           {message.content}
                         </Streamdown>
                       ) : message.content ? (
@@ -1468,6 +1485,7 @@ export default function App() {
           artifacts={artifacts}
           collapsed={artifactCollapsed}
           onCopy={(content, label) => void copyText(content, label)}
+          onLinkClick={openMarkdownLink}
           onOpen={openExternal}
           onToggle={() => setArtifactCollapsed((current) => !current)}
         />
