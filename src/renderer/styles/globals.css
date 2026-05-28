@@ -2722,6 +2722,21 @@ body {
   box-shadow: none;
 }
 
+.header-tool-button:first-child {
+  width: 50px;
+  gap: 6px;
+  padding: 0 9px;
+  border-radius: 12px;
+}
+
+.header-tool-button:first-child::after {
+  content: "⌄";
+  margin-top: -2px;
+  color: #8b9297;
+  font-size: 12px;
+  line-height: 1;
+}
+
 .header-tool-button svg,
 .settings-button svg {
   width: 15px;
