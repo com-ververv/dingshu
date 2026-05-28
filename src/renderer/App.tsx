@@ -424,7 +424,7 @@ function ToolEventList({
         <details
           key={event.toolCallId}
           className={`tool-event is-${event.status}`}
-          open={event.status === 'pending_confirmation' || event.status === 'failed'}
+          open={event.status === 'pending_confirmation'}
         >
           <summary>
             <span className="tool-event-icon">
