@@ -2167,14 +2167,14 @@ body {
 }
 
 .conversation-item {
-  min-height: 55px;
+  min-height: 34px;
   grid-template-columns: minmax(0, 1fr);
   border-radius: 10px;
 }
 
 .conversation-item > button:first-child {
-  min-height: 55px;
-  padding: 7px 66px 7px 10px;
+  min-height: 34px;
+  padding: 6px 66px 6px 10px;
   justify-content: start;
 }
 
@@ -2194,8 +2194,8 @@ body {
 }
 
 .conversation-preview {
-  display: block;
-  margin-top: 3px;
+  display: none;
+  margin-top: 0;
   color: #8f979d;
   font-size: 12px;
   line-height: 1.25;
@@ -2213,7 +2213,7 @@ body {
 
 .conversation-time {
   position: absolute;
-  top: 9px;
+  top: 7px;
   right: 10px;
   width: 64px;
   color: #8c949a;
@@ -2228,7 +2228,7 @@ body {
   position: absolute;
   width: 24px;
   min-height: 24px;
-  top: 16px;
+  top: 5px;
   color: #7f878d;
   opacity: 0;
   border-radius: 7px;
