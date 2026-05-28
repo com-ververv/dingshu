@@ -1945,9 +1945,9 @@ body.is-scrolling *::-webkit-scrollbar-thumb {
   --codex-header-height: 46px;
   --codex-right-card-width: 330px;
   --codex-page-bg: #ffffff;
-  --codex-sidebar-bg: #eef3f4;
-  --codex-sidebar-active: #e2e8e9;
-  --codex-sidebar-hover: #e7ecee;
+  --codex-sidebar-bg: #f1f3f3;
+  --codex-sidebar-active: #e8ebeb;
+  --codex-sidebar-hover: #ecefef;
   --codex-hairline: #edf0f1;
   --codex-muted: #8b9297;
   --codex-text: #2e3236;
@@ -2488,8 +2488,8 @@ body {
 }
 
 .tool-event-list {
-  gap: 2px;
-  margin: 0 0 10px;
+  gap: 1px;
+  margin: 0 0 8px;
 }
 
 .tool-event-summary {
@@ -2502,7 +2502,7 @@ body {
   color: #8b9297;
   background: transparent;
   border: none;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .tool-event {
@@ -2514,15 +2514,15 @@ body {
 }
 
 .tool-event summary {
-  min-height: 28px;
-  padding: 5px 2px;
+  min-height: 25px;
+  padding: 4px 2px;
   color: #626a70;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .tool-event-icon svg {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
 }
 
 .tool-event-status,
