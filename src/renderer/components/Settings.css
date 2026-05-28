@@ -20,7 +20,7 @@
   overflow-y: auto;
   background-color: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--panel-radius);
   box-shadow: var(--shadow-lg);
 }
 
@@ -45,7 +45,7 @@
   background: transparent;
   border: none;
   color: var(--color-text-secondary);
-  border-radius: var(--radius-md);
+  border-radius: var(--control-radius);
 }
 
 .close-button:hover {
@@ -56,32 +56,37 @@
 .settings-tabs {
   display: flex;
   border-bottom: 1px solid var(--color-border);
-  padding: 0 10px;
-  gap: 4px;
+  padding: 8px 10px;
+  gap: 6px;
 }
 
 .settings-tab {
-  padding: 11px 12px;
+  min-height: 32px;
+  padding: 0 12px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
   font-size: var(--text-sm);
   font-weight: 550;
   color: var(--color-text-secondary);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
   transition:
+    background-color 0.15s,
+    border-color 0.15s,
     color 0.15s,
-    border-color 0.15s;
+    box-shadow 0.15s;
 }
 
 .settings-tab:hover {
   color: var(--color-text);
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
 }
 
 .settings-tab.active {
   color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
 }
 
 .settings-content {
@@ -115,22 +120,22 @@
 
 .test-result {
   padding: 10px 11px;
-  border-radius: 8px;
+  border-radius: var(--control-radius);
   margin: 12px 0 0;
   font-size: var(--text-sm);
   border: 1px solid transparent;
 }
 
 .test-result.success {
-  background-color: rgb(22 138 74 / 0.1);
+  background-color: var(--color-success-bg);
   color: var(--color-success);
-  border-color: rgb(22 138 74 / 0.2);
+  border-color: var(--color-success-border);
 }
 
 .test-result.error {
-  background-color: rgb(220 38 38 / 0.1);
+  background-color: var(--color-error-bg);
   color: var(--color-error);
-  border-color: rgb(220 38 38 / 0.2);
+  border-color: var(--color-error-border);
 }
 
 .about-text {
@@ -186,7 +191,7 @@
   padding: 9px 10px;
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--control-radius);
   font-size: var(--text-xs);
   word-break: break-all;
   color: var(--color-text);
@@ -202,21 +207,21 @@
   align-items: center;
   gap: 8px;
   padding: 9px 10px;
-  border-radius: 8px;
+  border-radius: var(--control-radius);
   font-size: var(--text-sm);
   border: 1px solid transparent;
 }
 
 .db-status.warning {
-  background-color: rgb(254 243 199 / 0.72);
-  color: #8a4b08;
-  border-color: rgb(245 158 11 / 0.22);
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-color: var(--color-warning-border);
 }
 
 .db-status.success {
-  background-color: rgb(22 138 74 / 0.1);
+  background-color: var(--color-success-bg);
   color: var(--color-success);
-  border-color: rgb(22 138 74 / 0.2);
+  border-color: var(--color-success-border);
 }
 
 .db-status .status-icon {
@@ -227,7 +232,7 @@
   padding: 12px;
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--panel-radius);
 }
 
 .migration-section h4 {
@@ -280,7 +285,7 @@
   padding: 12px;
   background-color: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--panel-radius);
 }
 
 .auth-result {
@@ -303,9 +308,9 @@
   display: grid;
   gap: 2px;
   padding: 9px;
-  background: var(--color-bg);
+  background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--control-radius);
 }
 
 .capability-summary strong {
@@ -328,9 +333,9 @@
   padding: 9px;
   overflow-wrap: anywhere;
   font-size: var(--text-xs);
-  background: var(--color-bg);
+  background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: 7px;
+  border-radius: var(--control-radius);
 }
 
 /* Secondary button style */
