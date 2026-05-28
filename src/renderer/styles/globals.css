@@ -3140,3 +3140,25 @@ body {
 .sidebar-settings-entry:hover {
   background: #e9eeee;
 }
+
+/* Codex desktop parity pass: lighter header tools */
+.header-tools {
+  gap: 8px;
+}
+
+.header-tool-button,
+.settings-button {
+  background: transparent;
+  border-color: transparent;
+}
+
+.header-tool-button:hover,
+.settings-button:hover {
+  background: #f5f7f7;
+  border-color: transparent;
+}
+
+.header-tool-button:first-child {
+  background: #ffffff;
+  border-color: #edf0f1;
+}
