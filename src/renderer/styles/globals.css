@@ -3571,6 +3571,30 @@ body {
   display: none;
 }
 
+/* Codex desktop parity pass: conversation row action overlay */
+.conversation-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.conversation-item:not(.is-active) > button:first-child {
+  min-height: 40px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-right: 74px;
+}
+
+.conversation-delete {
+  right: 6px;
+  pointer-events: none;
+  transform: scale(0.94);
+}
+
+.conversation-item:hover .conversation-delete,
+.conversation-item:focus-within .conversation-delete {
+  pointer-events: auto;
+  transform: scale(1);
+}
+
 /* Codex desktop parity pass: header ready control */
 .header-right {
   gap: 10px;
