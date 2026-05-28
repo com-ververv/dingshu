@@ -2167,15 +2167,15 @@ body {
 }
 
 .conversation-item {
-  min-height: 34px;
+  min-height: 55px;
   grid-template-columns: minmax(0, 1fr);
-  border-radius: 9px;
+  border-radius: 10px;
 }
 
 .conversation-item > button:first-child {
-  min-height: 34px;
-  padding: 4px 74px 4px 10px;
-  justify-content: center;
+  min-height: 55px;
+  padding: 7px 72px 7px 10px;
+  justify-content: start;
 }
 
 .conversation-item:hover {
@@ -2188,11 +2188,20 @@ body {
 
 .conversation-title {
   color: #33383d;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 640;
+  line-height: 1.25;
 }
 
 .conversation-preview {
+  display: block;
+  margin-top: 3px;
+  color: #8f979d;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.conversation-preview:empty {
   display: none;
 }
 
@@ -2203,9 +2212,12 @@ body {
 
 .conversation-time {
   position: absolute;
-  top: 10px;
+  top: 9px;
   right: 10px;
   width: 64px;
+  color: #8c949a;
+  font-size: 13px;
+  font-weight: 500;
   text-align: right;
   white-space: nowrap;
 }
@@ -2215,7 +2227,7 @@ body {
   position: absolute;
   width: 24px;
   min-height: 24px;
-  align-self: center;
+  top: 16px;
   color: #7f878d;
   opacity: 0;
   border-radius: 7px;
