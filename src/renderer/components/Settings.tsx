@@ -266,6 +266,9 @@ export function Settings({ onClose }: SettingsProps) {
 
         <div className="settings-body">
           <nav className="settings-tabs" aria-label="Settings sections">
+            <button className="settings-back-button" onClick={onClose}>
+              ← Back to app
+            </button>
             <button className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>
               AI
             </button>

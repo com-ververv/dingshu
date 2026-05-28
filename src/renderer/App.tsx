@@ -6,14 +6,19 @@ import React, { FormEvent, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef
 import {
   AlertCircle,
   Bot,
+  Box,
   CheckCircle2,
+  Clock,
   Copy,
   Edit3,
   ExternalLink,
   FileText,
+  Folder,
   MessageSquare,
   PanelRightClose,
   PanelRightOpen,
+  PenLine,
+  Plug,
   RotateCcw,
   Search,
   Send,
@@ -437,6 +442,9 @@ function ToolEventList({
 function ArtifactPanel({
   artifacts,
   collapsed,
+  configItems,
+  hasPendingApproval,
+  isStreaming,
   onCopy,
   onLinkClick,
   onOpen,
@@ -444,6 +452,9 @@ function ArtifactPanel({
 }: {
   artifacts: Artifact[];
   collapsed: boolean;
+  configItems: ReturnType<typeof getConfigItems>;
+  hasPendingApproval: boolean;
+  isStreaming: boolean;
   onCopy: (content: string, label: string) => void;
   onLinkClick: (event: MouseEvent<HTMLElement>) => void;
   onOpen: (url: string) => void;
@@ -463,15 +474,49 @@ function ArtifactPanel({
 
   return (
     <aside className="artifact-panel" aria-label="Document artifact preview">
-      <div className="artifact-header">
-        <div>
-          <span className="artifact-eyebrow">Artifact</span>
-          <h2>文档预览</h2>
+      <section className="codex-side-card">
+        <div className="codex-card-header">
+          <h2>Progress</h2>
+          <button type="button" onClick={onToggle} title="收起预览">
+            <PanelRightClose size={16} />
+          </button>
         </div>
-        <button type="button" onClick={onToggle} title="收起预览">
-          <PanelRightClose size={16} />
-        </button>
-      </div>
+        <div className="progress-list">
+          <div className={`progress-item ${isStreaming ? 'is-active' : 'is-done'}`}>
+            <span className="progress-dot" />
+            <span>{isStreaming ? '正在处理当前请求' : '等待新的飞书任务'}</span>
+          </div>
+          <div className={`progress-item ${hasPendingApproval ? 'is-active' : ''}`}>
+            <span className="progress-dot" />
+            <span>{hasPendingApproval ? '等待工具确认' : '无待确认工具调用'}</span>
+          </div>
+          <div className={`progress-item ${artifacts.length > 0 ? 'is-done' : ''}`}>
+            <span className="progress-dot" />
+            <span>{artifacts.length > 0 ? '已生成文档预览' : '暂无 Artifact'}</span>
+          </div>
+        </div>
+        <div className="side-card-divider" />
+        <div className="codex-card-section-title">Environment</div>
+        <div className="environment-list">
+          {configItems.map((item) => (
+            <div key={item.label} className="environment-item">
+              {item.ok ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+              <span>{item.label}</span>
+              {item.detail ? <small>{item.detail}</small> : null}
+            </div>
+          ))}
+          <div className="environment-item">
+            <Folder size={14} />
+            <span>desktop-starter-app</span>
+          </div>
+        </div>
+        <div className="side-card-divider" />
+        <div className="codex-card-section-title">Sources</div>
+        <div className="environment-item">
+          <Bot size={14} />
+          <span>SiliconFlow Kimi-K2.6</span>
+        </div>
+      </section>
 
       {!activeArtifact ? (
         <div className="artifact-empty">
@@ -634,6 +679,8 @@ export default function App() {
     message.toolEvents?.some((event) => event.status === 'pending_confirmation')
   );
   const artifacts = useMemo(() => deriveArtifacts(messages), [messages]);
+  const activeConversationTitle =
+    conversations.find((conversation) => conversation.id === conversationId)?.title ?? 'New chat';
 
   async function refreshConversations(nextActiveId?: string) {
     const result = await window.api.chat.listConversations();
@@ -1274,13 +1321,10 @@ export default function App() {
     <div className="app-container">
       <header className="app-header">
         <div className="header-left">
-          <div className="app-logo">
-            <Bot size={20} />
-            <div>
-              <h1 className="app-title">Pexar Lark Agent</h1>
-              <p className="app-subtitle">SiliconFlow Kimi-K2.6</p>
-            </div>
-          </div>
+          <h1 className="app-title">{activeConversationTitle}</h1>
+          <button type="button" className="header-more-button" aria-label="更多">
+            ...
+          </button>
         </div>
         <div className="header-right">
           <span className={`chat-status ${isStreaming ? 'is-active' : ''}`} data-testid="chat-status">
@@ -1293,10 +1337,38 @@ export default function App() {
         </div>
       </header>
 
-      <main className="chat-shell">
+      <main className={`chat-shell ${messages.length === 0 ? 'is-empty' : 'has-messages'}`}>
         <aside className="conversation-sidebar" aria-label="Conversation history">
+          <div className="sidebar-window-spacer" aria-hidden="true" />
+          <nav className="sidebar-primary-nav" aria-label="Primary navigation">
+            <button type="button" onClick={startNewConversation} disabled={isStreaming}>
+              <PenLine size={18} />
+              <span>New chat</span>
+            </button>
+            <button type="button" onClick={() => conversationSearchRef.current?.focus()}>
+              <Search size={18} />
+              <span>Search</span>
+            </button>
+            <button type="button" onClick={() => setShowSettings(true)}>
+              <Box size={18} />
+              <span>Skills</span>
+            </button>
+            <button type="button" disabled>
+              <Plug size={18} />
+              <span>Plugins</span>
+            </button>
+            <button type="button" disabled>
+              <Clock size={18} />
+              <span>Automations</span>
+            </button>
+          </nav>
+          <div className="sidebar-section-label">Projects</div>
+          <div className="sidebar-project-title">
+            <Folder size={17} />
+            <span>desktop-starter-app</span>
+          </div>
           <div className="conversation-sidebar-header">
-            <span>会话</span>
+            <span>Chats</span>
             <button
               type="button"
               onClick={startNewConversation}
@@ -1394,6 +1466,10 @@ export default function App() {
               ))
             )}
           </div>
+          <button type="button" className="sidebar-settings-entry" onClick={() => setShowSettings(true)}>
+            <Settings size={18} />
+            <span>Settings</span>
+          </button>
         </aside>
 
         <section className="chat-thread" aria-label="Chat messages" data-testid="chat-thread">
@@ -1412,11 +1488,8 @@ export default function App() {
           ) : null}
           {messages.length === 0 ? (
             <div className="chat-empty" data-testid="chat-empty-state">
-              <div className="chat-empty-icon">
-                <Bot size={28} />
-              </div>
-              <h2>今天要处理什么飞书任务？</h2>
-              <p>可以创建文档、查询群消息、搜索云文档或发送消息。</p>
+              <h2>What should we build?</h2>
+              <p>Pexar Lark Agent</p>
               <div className="suggested-grid">
                 {suggestedPrompts.map((prompt) => (
                   <button key={prompt} type="button" onClick={() => void sendMessage(prompt)} disabled={isStreaming}>
@@ -1529,11 +1602,19 @@ export default function App() {
               </button>
             )}
           </div>
+          <div className="composer-status-row" aria-hidden="true">
+            <span>Pexar</span>
+            <span>5.5</span>
+            <span>codex/siliconflow-ai-sdk-demo</span>
+          </div>
         </form>
 
         <ArtifactPanel
           artifacts={artifacts}
           collapsed={artifactCollapsed}
+          configItems={configItems}
+          hasPendingApproval={hasPendingApproval}
+          isStreaming={isStreaming}
           onCopy={(content, label) => void copyText(content, label)}
           onLinkClick={openMarkdownLink}
           onOpen={openExternal}
