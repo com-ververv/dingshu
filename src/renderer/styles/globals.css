@@ -3162,3 +3162,30 @@ body {
   background: #ffffff;
   border-color: #edf0f1;
 }
+
+/* Codex desktop parity pass: lighter status side card */
+.codex-side-card {
+  gap: 13px;
+  padding: 17px 17px 18px;
+}
+
+.codex-card-header h2,
+.codex-card-section-title {
+  font-size: 14px;
+}
+
+.progress-list,
+.environment-list {
+  gap: 8px;
+}
+
+.progress-item,
+.environment-item,
+.environment-item small {
+  min-height: 25px;
+  font-size: 13.5px;
+}
+
+.codex-card-divider {
+  margin: 1px 0 3px;
+}
