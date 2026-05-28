@@ -3189,3 +3189,26 @@ body {
 .codex-card-divider {
   margin: 1px 0 3px;
 }
+
+/* Codex desktop parity pass: message text weight */
+.chat-message.is-user .message-body,
+.chat-message.is-user .message-content {
+  max-width: 520px;
+}
+
+.chat-message.is-user .message-content {
+  padding: 8px 13px;
+  color: #282c30;
+  background: #f1f2f2;
+  border-radius: 13px;
+  line-height: 1.48;
+}
+
+.chat-message.is-assistant .message-content {
+  color: #34393e;
+  line-height: 1.58;
+}
+
+.markdown-content {
+  line-height: 1.58;
+}
