@@ -36,6 +36,7 @@ type ChatMessage = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  createdAt?: number;
   status?: 'streaming' | 'completed' | 'cancelled' | 'failed';
   error?: string;
   toolEvents?: ToolEvent[];
@@ -196,6 +197,16 @@ function formatConversationTime(timestamp?: number): string {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(timestamp));
+}
+
+function formatMessageTime(timestamp?: number): string {
+  if (!timestamp) {
+    return '';
+  }
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
     minute: '2-digit',
   }).format(new Date(timestamp));
 }
@@ -629,7 +640,6 @@ function MentionPicker({
 
 export default function App() {
   const [showSettings, setShowSettings] = useState(false);
-  const [appVersion, setAppVersion] = useState<string>('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ChatConversationSummary[]>([]);
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
@@ -652,6 +662,7 @@ export default function App() {
   const activeRequestIdRef = useRef<string | null>(null);
   const streamingMessageIdRef = useRef<string | null>(null);
   const mentionRequestRef = useRef(0);
+  const scrollHideTimerRef = useRef<number | null>(null);
 
   const isStreaming = activeRequestId !== null;
   const canSend = input.trim().length > 0 && !isStreaming && secureStatus?.siliconflowApiKeyHealthy !== false;
@@ -713,6 +724,7 @@ export default function App() {
         id: message.id,
         role: message.role,
         content: message.content,
+        createdAt: message.createdAt,
         status: message.status,
         error: message.error,
         toolEvents: message.toolEvents,
@@ -797,16 +809,33 @@ export default function App() {
   }
 
   useEffect(() => {
-    window.api.app.getVersion().then((result) => {
-      if (result.success && result.data) {
-        setAppVersion(result.data);
-      }
-    });
     window.api.secureSettings.getStatus().then((result) => {
       if (result.success && result.data) {
         setSecureStatus(result.data);
       }
     });
+  }, []);
+
+  useEffect(() => {
+    function showScrollbarsWhileScrolling() {
+      document.body.classList.add('is-scrolling');
+      if (scrollHideTimerRef.current !== null) {
+        window.clearTimeout(scrollHideTimerRef.current);
+      }
+      scrollHideTimerRef.current = window.setTimeout(() => {
+        document.body.classList.remove('is-scrolling');
+        scrollHideTimerRef.current = null;
+      }, 800);
+    }
+
+    window.addEventListener('scroll', showScrollbarsWhileScrolling, true);
+    return () => {
+      window.removeEventListener('scroll', showScrollbarsWhileScrolling, true);
+      if (scrollHideTimerRef.current !== null) {
+        window.clearTimeout(scrollHideTimerRef.current);
+      }
+      document.body.classList.remove('is-scrolling');
+    };
   }, []);
 
   useEffect(() => {
@@ -835,6 +864,7 @@ export default function App() {
               id: message.id,
               role: message.role,
               content: message.content,
+              createdAt: message.createdAt,
               status: message.status,
               error: message.error,
               toolEvents: message.toolEvents,
@@ -1136,16 +1166,19 @@ export default function App() {
     }
 
     const requestId = createId('request');
+    const messageCreatedAt = Number(requestId.split('_')[1]) || undefined;
     const userMessage: ChatMessage = {
       id: createId('user'),
       role: 'user',
       content: trimmed,
+      createdAt: messageCreatedAt,
       status: 'completed',
     };
     const assistantMessage: ChatMessage = {
       id: createId('assistant'),
       role: 'assistant',
       content: '',
+      createdAt: messageCreatedAt,
       status: 'streaming',
     };
 
@@ -1510,12 +1543,14 @@ export default function App() {
                     {message.role === 'user' ? <UserRound size={16} /> : <Bot size={16} />}
                   </div>
                   <div className="message-body">
-                    <div className="message-meta">
-                      <span>{message.role === 'user' ? 'You' : 'Assistant'}</span>
-                      {message.status && message.role === 'assistant' ? (
-                        <span className={`message-state is-${message.status}`}>{getMessageStatusLabel(message.status)}</span>
-                      ) : null}
-                    </div>
+                    {message.role === 'assistant' ? (
+                      <div className="message-meta">
+                        <span>Assistant</span>
+                        {message.status ? (
+                          <span className={`message-state is-${message.status}`}>{getMessageStatusLabel(message.status)}</span>
+                        ) : null}
+                      </div>
+                    ) : null}
                     <div className="message-content" onClick={openMarkdownLink}>
                       {message.role === 'assistant' && message.toolEvents ? (
                         <ToolEventList
@@ -1535,9 +1570,10 @@ export default function App() {
                       )}
                       {message.error ? <p className="message-error">{message.error}</p> : null}
                     </div>
-                    {message.role === 'assistant' && message.content ? (
+                    {message.content ? (
                       <div className="message-actions">
-                        <button type="button" onClick={() => void copyMessage(message.content)} title="Copy">
+                        {message.role === 'user' ? <span>{formatMessageTime(message.createdAt)}</span> : null}
+                        <button type="button" onClick={() => void copyMessage(message.content)} title="复制">
                           <Copy size={14} />
                         </button>
                       </div>
@@ -1621,8 +1657,6 @@ export default function App() {
           onToggle={() => setArtifactCollapsed((current) => !current)}
         />
       </main>
-
-      <footer className="app-footer">Version {appVersion || '-'}</footer>
 
       {showSettings && (
         <SettingsModal

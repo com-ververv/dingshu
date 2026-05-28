@@ -885,15 +885,30 @@ body,
 .message-actions {
   display: flex;
   gap: var(--space-xs);
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.chat-message:hover .message-actions,
+.chat-message:focus-within .message-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .message-actions button {
+  display: grid;
   width: 30px;
   height: 30px;
   padding: 0;
+  place-items: center;
   color: var(--color-text-secondary);
   background: transparent;
   border: none;
+  border-radius: 8px;
 }
 
 .message-actions button:hover {
@@ -1402,6 +1417,18 @@ label {
 }
 
 /* Scrollbar */
+* {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+}
+
+*:hover,
+*:focus,
+*:focus-within,
+body.is-scrolling * {
+  scrollbar-color: var(--color-border) transparent;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -1412,8 +1439,15 @@ label {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: transparent;
   border-radius: 4px;
+}
+
+*:hover::-webkit-scrollbar-thumb,
+*:focus::-webkit-scrollbar-thumb,
+*:focus-within::-webkit-scrollbar-thumb,
+body.is-scrolling *::-webkit-scrollbar-thumb {
+  background: var(--color-border);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -1701,6 +1735,11 @@ label {
 
 .chat-message.is-user .message-meta {
   justify-content: flex-end;
+}
+
+.chat-message.is-user .message-actions {
+  justify-content: flex-end;
+  padding-right: 6px;
 }
 
 .chat-message.is-user .message-content {
@@ -2159,6 +2198,7 @@ body {
 
 .chat-message.is-user .message-body {
   max-width: 560px;
+  align-items: flex-end;
 }
 
 .chat-message.is-user .message-content {
@@ -2169,6 +2209,11 @@ body {
   border-radius: 14px;
   font-size: 14px;
   line-height: 1.55;
+}
+
+.chat-message.is-user .message-actions {
+  min-height: 28px;
+  margin-top: 2px;
 }
 
 .chat-message.is-assistant .message-content {
