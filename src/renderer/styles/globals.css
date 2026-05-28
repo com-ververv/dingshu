@@ -3808,4 +3808,17 @@ body {
     margin-top: -35px;
     padding-right: 116px;
   }
+
+  .message-list {
+    padding-bottom: 360px;
+  }
+
+  .message-list > div:last-child {
+    min-height: 190px;
+    flex: 0 0 190px;
+  }
+
+  .tool-event[open] {
+    margin-bottom: 34px;
+  }
 }
