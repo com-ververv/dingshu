@@ -2901,13 +2901,15 @@ body {
 
 .composer-input-wrap {
   min-height: 96px;
-  border-radius: 18px;
+  border-color: #e7ebed;
+  border-radius: 20px;
+  box-shadow: 0 12px 34px rgb(0 0 0 / 0.075);
 }
 
 .chat-composer textarea {
   min-height: 96px;
   padding: 16px 104px 39px 16px;
-  border-radius: 18px;
+  border-radius: 20px;
   font-size: 14px;
 }
 
