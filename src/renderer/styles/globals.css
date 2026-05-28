@@ -3464,12 +3464,21 @@ body {
   gap: 9px;
 }
 
+.progress-list {
+  gap: 10px;
+}
+
 .environment-item,
+.progress-item,
 .environment-item small {
   min-height: 27px;
   color: #2f3337;
   font-size: 14px;
   font-weight: 470;
+}
+
+.progress-item {
+  color: #8b9398;
 }
 
 .environment-item svg,
@@ -3480,6 +3489,17 @@ body {
   stroke-width: 1.85;
 }
 
+.progress-item svg {
+  color: #9aa2a7;
+  fill: none;
+  stroke-width: 2.1;
+}
+
+.progress-item.is-active svg {
+  color: #4c8ae8;
+}
+
+.side-card-divider,
 .codex-card-divider {
   margin: 5px 0 4px;
 }

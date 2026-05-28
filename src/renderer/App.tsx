@@ -8,6 +8,7 @@ import {
   Bot,
   Box,
   CheckCircle2,
+  Circle,
   Clock,
   Copy,
   Crosshair,
@@ -518,18 +519,42 @@ function ArtifactPanel({
 
   const activeArtifact = artifacts[0];
   const showProgress = isStreaming || hasPendingApproval || hasToolActivity;
+  const progressItems = [
+    {
+      active: isStreaming,
+      label: isStreaming ? '飞书任务正在执行' : '等待新的飞书任务',
+    },
+    {
+      active: hasPendingApproval,
+      label: hasPendingApproval ? '等待确认工具调用' : '无待确认工具调用',
+    },
+    {
+      active: artifacts.length > 0,
+      label: artifacts.length > 0 ? 'Artifact 已生成' : '暂无 Artifact',
+    },
+  ];
 
   return (
     <aside className="artifact-panel" aria-label="Document artifact preview">
       <section className="codex-side-card">
         <div className="codex-card-header">
-          <h2>Environment</h2>
+          <h2>{showProgress ? 'Progress' : 'Environment'}</h2>
           <button type="button" onClick={onToggle} title="收起预览">
             <Settings size={16} />
           </button>
         </div>
         {showProgress ? (
           <>
+            <div className="progress-list">
+              {progressItems.map((item) => (
+                <div className={`progress-item${item.active ? ' is-active' : ''}`} key={item.label}>
+                  <Circle size={14} />
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="side-card-divider" />
+            <div className="codex-card-section-title">Environment</div>
             <div className="environment-list">
               <div className="environment-item environment-changes">
                 <FileText size={14} />
