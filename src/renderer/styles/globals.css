@@ -3790,6 +3790,22 @@ body {
   }
 
   .chat-composer {
-    width: min(740px, calc(100% - 70px));
+    width: min(720px, calc(100% - 92px));
+    padding-bottom: 26px;
+  }
+
+  .composer-input-wrap,
+  .chat-composer textarea {
+    min-height: 104px;
+  }
+
+  .chat-composer textarea {
+    padding-top: 17px;
+    padding-bottom: 40px;
+  }
+
+  .composer-status-row {
+    margin-top: -35px;
+    padding-right: 116px;
   }
 }
