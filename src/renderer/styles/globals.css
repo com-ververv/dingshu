@@ -2875,6 +2875,7 @@ body {
   gap: 15px;
   padding: 18px 18px 20px;
   border-radius: 20px;
+  box-shadow: 0 16px 38px rgb(0 0 0 / 0.075);
 }
 
 .codex-card-header h2,
