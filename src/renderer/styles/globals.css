@@ -3617,6 +3617,30 @@ body {
   stroke-width: 2;
 }
 
+/* Codex desktop parity pass: header tool controls */
+.chat-status {
+  display: none;
+}
+
+.chat-status.is-active {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 22px;
+  padding: 2px 10px;
+  color: #3d8b6f;
+  background: #eef9f4;
+  border-color: #d6efe2;
+  font-size: 11px;
+}
+
+.header-tool-group {
+  display: inline-flex;
+}
+
+.header-right > .settings-button {
+  display: none;
+}
+
 /* Codex desktop parity pass: expanded tool card */
 .tool-event[open] {
   width: min(100%, 880px);
