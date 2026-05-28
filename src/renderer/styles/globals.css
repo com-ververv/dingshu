@@ -416,10 +416,14 @@ body,
 }
 
 .conversation-rename-input {
+  grid-column: 1;
   align-self: center;
+  min-width: 0;
+  width: calc(100% - 8px);
   min-height: 36px;
   margin: 8px 0 8px 8px;
   padding: 0 8px;
+  box-sizing: border-box;
   font-size: var(--text-sm);
 }
 
