@@ -18,6 +18,7 @@ import {
   Github,
   Info,
   Laptop,
+  LayoutPanelLeft,
   MessageSquare,
   PanelRightOpen,
   PenLine,
@@ -1355,6 +1356,17 @@ export default function App() {
           <span className={`chat-status ${isStreaming ? 'is-active' : ''}`} data-testid="chat-status">
             {statusText}
           </span>
+          <div className="header-tool-group" aria-label="Workspace tools">
+            <button type="button" className="header-tool-button" aria-label="编辑器">
+              <Box size={15} />
+            </button>
+            <button type="button" className="header-tool-button" aria-label="信息">
+              <Info size={15} />
+            </button>
+            <button type="button" className="header-tool-button" aria-label="布局">
+              <LayoutPanelLeft size={15} />
+            </button>
+          </div>
           <button onClick={() => setShowSettings(true)} className="settings-button" type="button">
             <Settings size={18} />
             <span>Settings</span>
@@ -1387,6 +1399,11 @@ export default function App() {
               <span>Automations</span>
             </button>
           </nav>
+          <div className="sidebar-section-label">Pinned</div>
+          <div className="sidebar-pinned-entry">
+            <Folder size={16} />
+            <span>code</span>
+          </div>
           <div className="sidebar-section-label">Projects</div>
           <div className="sidebar-project-title">
             <Folder size={16} />
