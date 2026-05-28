@@ -2715,7 +2715,18 @@ body {
 .settings-button {
   width: 28px;
   min-height: 28px;
+  color: #6d747a;
+  background: #ffffff;
+  border-color: #edf0f1;
   border-radius: 9px;
+  box-shadow: none;
+}
+
+.header-tool-button svg,
+.settings-button svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.9;
 }
 
 .sidebar-window-spacer {
@@ -2923,11 +2934,15 @@ body {
   min-height: 34px;
   margin-top: -35px;
   padding: 9px 18px 0;
-  padding-right: 148px;
-  gap: 15px;
+  padding-right: 132px;
+  gap: 13px;
   font-size: 12px;
 }
 
+.composer-status-row span {
+  white-space: nowrap;
+}
+
 .composer-model {
-  padding: 8px 12px;
+  padding: 7px 11px;
 }

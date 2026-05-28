@@ -20,6 +20,7 @@ import {
   Info,
   Laptop,
   LayoutPanelLeft,
+  Monitor,
   Plus,
   MessageSquare,
   PanelRightClose,
@@ -1449,7 +1450,7 @@ export default function App() {
           </span>
           <div className="header-tool-group" aria-label="Workspace tools">
             <button type="button" className="header-tool-button" aria-label="编辑器">
-              <Box size={15} />
+              <Monitor size={15} />
             </button>
             <button type="button" className="header-tool-button" aria-label="信息">
               <Info size={15} />
