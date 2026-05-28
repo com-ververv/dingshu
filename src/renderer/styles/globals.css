@@ -3612,3 +3612,59 @@ body {
   height: 19px;
   stroke-width: 2;
 }
+
+/* Codex desktop parity pass: expanded tool card */
+.tool-event[open] {
+  width: min(100%, 880px);
+  margin: 10px 0 18px;
+  padding: 0 18px 18px;
+  background: #fbfcfc;
+  border: 1px solid #e0e5e8;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.tool-event[open] summary {
+  min-height: 46px;
+  padding: 11px 0 9px;
+  color: #3f464b;
+  border-bottom: 0;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.tool-event[open] .tool-event-icon {
+  width: 18px;
+}
+
+.tool-event[open] .tool-event-status,
+.tool-event[open] .tool-event-elapsed {
+  color: #8f969b;
+  font-size: 14px;
+  font-weight: 440;
+}
+
+.tool-event[open] .tool-event-detail {
+  gap: 10px;
+  padding: 3px 0 0;
+  color: #858d92;
+  font-size: 16px;
+  font-weight: 560;
+}
+
+.tool-event[open] .tool-event-detail pre {
+  max-height: 190px;
+  margin: 0 0 3px;
+  padding: 15px 16px;
+  color: #596068;
+  background: #ffffff;
+  border: 1px solid #e4e8eb;
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.42;
+  white-space: pre-wrap;
+}
+
+.tool-event[open] .tool-event-error {
+  color: #8b9297;
+}
