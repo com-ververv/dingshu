@@ -2917,7 +2917,8 @@ body {
 
 .codex-card-header h2,
 .codex-card-section-title {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 610;
 }
 
 .progress-list,
@@ -2930,6 +2931,13 @@ body {
 .environment-item small {
   min-height: 27px;
   font-size: 14px;
+}
+
+.environment-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-composer {
