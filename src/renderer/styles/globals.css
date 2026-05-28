@@ -3390,3 +3390,17 @@ body {
   padding-right: 22px;
   padding-left: 12px;
 }
+
+/* Codex desktop parity pass: lower composer dock */
+.message-list {
+  padding-bottom: 132px;
+}
+
+.chat-composer {
+  padding-bottom: 18px;
+}
+
+.composer-input-wrap,
+.chat-composer textarea {
+  min-height: 92px;
+}
