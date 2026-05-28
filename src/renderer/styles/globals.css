@@ -2692,7 +2692,7 @@ body {
 /* Codex desktop parity pass: normalize for the Electron test viewport */
 :root {
   --codex-sidebar-width: 292px;
-  --codex-right-card-width: 306px;
+  --codex-right-card-width: 318px;
   --codex-header-height: 46px;
 }
 
@@ -2906,8 +2906,8 @@ body {
 }
 
 .codex-side-card {
-  gap: 14px;
-  padding: 17px 17px 19px;
+  gap: 15px;
+  padding: 18px 18px 20px;
   border-radius: 20px;
   box-shadow: 0 14px 32px rgb(0 0 0 / 0.065);
 }
