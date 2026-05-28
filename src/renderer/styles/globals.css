@@ -2692,7 +2692,7 @@ body {
 /* Codex desktop parity pass: normalize for the Electron test viewport */
 :root {
   --codex-sidebar-width: 292px;
-  --codex-right-card-width: 330px;
+  --codex-right-card-width: 306px;
   --codex-header-height: 46px;
 }
 
@@ -2803,24 +2803,24 @@ body {
 }
 
 .conversation-item {
-  min-height: 34px;
-  border-radius: 10px;
+  min-height: 32px;
+  border-radius: 9px;
 }
 
 .conversation-item > button:first-child {
-  min-height: 34px;
-  padding: 6px 66px 6px 10px;
+  min-height: 32px;
+  padding: 5px 64px 5px 10px;
 }
 
 .conversation-title {
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .conversation-time {
-  top: 7px;
+  top: 6px;
   right: 10px;
   width: 64px;
-  font-size: 13px;
+  font-size: 12.5px;
 }
 
 .sidebar-settings-entry {
@@ -2868,14 +2868,14 @@ body {
 }
 
 .artifact-panel {
-  padding: 74px 18px 24px 10px;
+  padding: 82px 20px 24px 10px;
 }
 
 .codex-side-card {
-  gap: 15px;
-  padding: 18px 18px 20px;
+  gap: 14px;
+  padding: 17px 17px 19px;
   border-radius: 20px;
-  box-shadow: 0 16px 38px rgb(0 0 0 / 0.075);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 0.065);
 }
 
 .codex-card-header h2,
@@ -2897,26 +2897,26 @@ body {
 
 .chat-composer {
   width: min(760px, calc(100% - 92px));
-  padding-bottom: 22px;
+  padding-bottom: 20px;
 }
 
 .composer-input-wrap {
-  min-height: 96px;
+  min-height: 90px;
   border-color: #e7ebed;
   border-radius: 20px;
-  box-shadow: 0 12px 34px rgb(0 0 0 / 0.075);
+  box-shadow: 0 11px 30px rgb(0 0 0 / 0.07);
 }
 
 .chat-composer textarea {
-  min-height: 96px;
-  padding: 16px 104px 39px 16px;
+  min-height: 90px;
+  padding: 15px 104px 36px 16px;
   border-radius: 20px;
   font-size: 14px;
 }
 
 .composer-actions {
   right: 10px;
-  bottom: 39px;
+  bottom: 35px;
 }
 
 .composer-actions .secondary-button {
@@ -2934,9 +2934,9 @@ body {
 }
 
 .composer-status-row {
-  min-height: 34px;
-  margin-top: -35px;
-  padding: 9px 18px 0;
+  min-height: 32px;
+  margin-top: -33px;
+  padding: 8px 18px 0;
   padding-right: 132px;
   gap: 13px;
   font-size: 12px;
