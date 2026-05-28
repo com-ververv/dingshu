@@ -9,7 +9,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { app, BrowserWindow, Menu, nativeTheme, screen } from 'electron';
+import { app, BrowserWindow, Menu, nativeTheme, screen, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { autoUpdater } from 'electron-updater';
@@ -91,6 +91,10 @@ if (require('electron-squirrel-startup')) {
 }
 
 let mainWindow: BrowserWindow | null = null;
+
+function isExternalHttpUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
 
 function showMainWindow(): void {
   if (!mainWindow || mainWindow.isDestroyed()) {
@@ -183,6 +187,21 @@ const createWindow = (): void => {
 
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
     console.error('[App] Main window did-fail-load:', { errorCode, errorDescription, validatedURL });
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (isExternalHttpUrl(url)) {
+      void shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!isExternalHttpUrl(url)) {
+      return;
+    }
+    event.preventDefault();
+    void shell.openExternal(url);
   });
 
   // Open DevTools in development
