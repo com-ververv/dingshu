@@ -2828,7 +2828,7 @@ body {
 }
 
 .message-list {
-  width: min(820px, calc(100% - 56px));
+  width: min(760px, calc(100% - 92px));
   padding: 30px 0 128px;
 }
 
@@ -2895,7 +2895,7 @@ body {
 }
 
 .chat-composer {
-  width: min(820px, calc(100% - 56px));
+  width: min(760px, calc(100% - 92px));
   padding-bottom: 22px;
 }
 
