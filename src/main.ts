@@ -92,6 +92,19 @@ if (require('electron-squirrel-startup')) {
 
 let mainWindow: BrowserWindow | null = null;
 
+function showMainWindow(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow();
+    return;
+  }
+
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore();
+  }
+  mainWindow.show();
+  mainWindow.focus();
+}
+
 const createWindow = (): void => {
   // Load saved window state
   const windowState = loadWindowState();
@@ -334,15 +347,19 @@ app.whenReady().then(() => {
 
   // macOS: Re-create window when dock icon is clicked
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    showMainWindow();
+  });
+
+  app.on('did-become-active', () => {
+    showMainWindow();
   });
 });
 
 // Quit when all windows are closed (except on macOS)
 app.on('window-all-closed', () => {
-  app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });
 
 // Handle uncaught exceptions
