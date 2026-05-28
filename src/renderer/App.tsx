@@ -211,6 +211,26 @@ function formatConversationTime(timestamp?: number): string {
   }).format(new Date(timestamp));
 }
 
+function formatConversationPreview(preview?: string): string {
+  if (!preview) {
+    return '';
+  }
+  const normalized = preview
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]*)\]\([^)]*$/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/^\s*[-*+]\s+/gm, ' ')
+    .replace(/-{2,}/g, ' ')
+    .replace(/[|*_~>#]+/g, ' ')
+    .replace(/\s+-\s+/g, ' ')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return normalized.length > 86 ? `${normalized.slice(0, 86).trimEnd()}...` : normalized;
+}
+
 function formatMessageTime(timestamp?: number): string {
   if (!timestamp) {
     return '';
@@ -1555,8 +1575,10 @@ export default function App() {
                       ) : (
                         <button type="button" onClick={() => void loadConversation(conversation.id)}>
                           <span className="conversation-title">{conversation.title}</span>
-                          {conversation.lastMessagePreview ? (
-                            <span className="conversation-preview">{conversation.lastMessagePreview}</span>
+                          {formatConversationPreview(conversation.lastMessagePreview) ? (
+                            <span className="conversation-preview">
+                              {formatConversationPreview(conversation.lastMessagePreview)}
+                            </span>
                           ) : null}
                           <span className="conversation-time">
                             {formatConversationTime(conversation.lastMessageAt ?? conversation.updatedAt)}

@@ -1941,9 +1941,9 @@ body.is-scrolling *::-webkit-scrollbar-thumb {
 
 /* Codex desktop parity pass */
 :root {
-  --codex-sidebar-width: 286px;
+  --codex-sidebar-width: 282px;
   --codex-header-height: 46px;
-  --codex-right-card-width: 346px;
+  --codex-right-card-width: 330px;
   --codex-page-bg: #ffffff;
   --codex-sidebar-bg: #eef3f4;
   --codex-sidebar-active: #e2e8e9;
@@ -2045,7 +2045,7 @@ body {
   align-items: center;
   gap: 18px;
   height: 49px;
-  padding: 0 0 0 137px;
+  padding: 0 0 0 126px;
   color: #9aa1a6;
   -webkit-app-region: drag;
 }
@@ -2174,7 +2174,7 @@ body {
 
 .conversation-item > button:first-child {
   min-height: 55px;
-  padding: 7px 72px 7px 10px;
+  padding: 7px 66px 7px 10px;
   justify-content: start;
 }
 
@@ -2199,6 +2199,7 @@ body {
   color: #8f979d;
   font-size: 12px;
   line-height: 1.25;
+  max-width: 100%;
 }
 
 .conversation-preview:empty {
@@ -2342,16 +2343,16 @@ body {
 
 .artifact-panel {
   width: var(--codex-right-card-width);
-  padding: 64px 17px 24px 20px;
+  padding: 62px 18px 24px 10px;
   background: transparent;
 }
 
 .codex-side-card {
-  gap: 17px;
-  padding: 20px 20px 22px;
-  border-color: #e8ecee;
-  border-radius: 17px;
-  box-shadow: 0 12px 28px rgb(0 0 0 / 0.065);
+  gap: 16px;
+  padding: 19px 19px 21px;
+  border-color: #e9ecee;
+  border-radius: 18px;
+  box-shadow: 0 13px 30px rgb(0 0 0 / 0.07);
 }
 
 .codex-card-header h2,
@@ -2372,9 +2373,9 @@ body {
 
 .progress-item,
 .environment-item {
-  min-height: 30px;
+  min-height: 29px;
   color: #676f75;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.35;
 }
 
@@ -2556,13 +2557,17 @@ body {
 
 .chat-composer {
   grid-template-columns: minmax(0, 1fr);
-  width: min(806px, calc(100% - 92px));
+  width: min(760px, calc(100% - 92px));
   gap: 0;
-  padding-bottom: 28px;
+  padding-bottom: 26px;
 }
 
 .composer-input-wrap {
   z-index: 1;
+  border: 1px solid #e4e8ea;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 10px 32px rgb(0 0 0 / 0.09);
 }
 
 .chat-composer textarea {
@@ -2570,12 +2575,14 @@ body {
   padding: 16px 96px 39px 16px;
   resize: none;
   border-radius: 18px;
+  border: 0;
+  box-shadow: none;
 }
 
 .composer-actions {
   position: absolute;
-  right: 9px;
-  bottom: 42px;
+  right: 10px;
+  bottom: 41px;
   z-index: 2;
   padding: 0;
 }
@@ -2616,13 +2623,18 @@ body {
   position: relative;
   z-index: 3;
   grid-column: 1;
-  min-height: 38px;
-  margin-top: -28px;
-  padding: 12px 18px 0;
+  min-height: 34px;
+  margin-top: -35px;
+  padding: 9px 18px 0;
   padding-right: 126px;
   background: transparent;
   border: 0;
   border-radius: 0;
+}
+
+.tool-event-detail pre {
+  max-height: 78px;
+  line-height: 1.35;
 }
 
 @media (max-width: 980px) {
