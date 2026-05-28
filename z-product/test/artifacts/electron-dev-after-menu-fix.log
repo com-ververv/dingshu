@@ -1,0 +1,67 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm.
+
+> desktop-starter-app@1.0.3 dev
+> electron-forge start
+
+❯ Checking your system
+❯ Checking package manager version
+✔ Found npm@11.6.2
+✔ Checking your system
+[?25h❯ Locating application
+✔ Locating application
+❯ Loading configuration
+✔ Loading configuration
+❯ Preparing native dependencies
+✔ Preparing native dependencies: 1 / 1
+❯ Running generateAssets hook
+✔ Running generateAssets hook
+❯ Running preStart hook
+❯ [plugin-vite] Preparing Vite bundles
+❯ Launching Vite dev servers for renderer process code...
+❯ Target main_window
+6:19:34 PM [vite] (client) Re-optimizing dependencies because vite config has changed
+›   ➜  Local:   http://localhost:5173/  
+› ➜  Network: use --host to expose
+✔ Target main_window
+✔ Launched Vite dev servers for renderer process code
+❯ Building main process and preload bundles...
+❯ Building src/main.ts target
+❯ Building src/preload.ts target
+6:19:34 PM [@electron-forge/plugin-vite] target built src/preload.ts
+✔ Building src/preload.ts target
+6:19:35 PM [@electron-forge/plugin-vite] target built src/main.ts
+✔ Building src/main.ts target
+✔ Built main process and preload bundles
+✔ [plugin-vite] Preparing Vite bundles
+✔ Running preStart hook
+✔ Launched Electron app. Type rs in terminal to restart main process.
+[?25h
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[App] Starting...
+Initializing database schema...
+Database schema initialization complete
+Database initialized at: /Users/yanghaibin/Documents/DesktopStarterApp/app.db
+[App] Database initialized
+[IPC] All handlers registered
+[App] IPC handlers registered
+[App] Main window created: { x: 3, y: 32, width: 1512, height: 857 }
+[App] Main window ready-to-show: {
+  bounds: { x: 3, y: 33, width: 1512, height: 857 },
+  visible: true,
+  minimized: false
+}
+[App] Main window did-finish-load: {
+  bounds: { x: 3, y: 33, width: 1512, height: 857 },
+  visible: true,
+  minimized: false
+}
+[SecureSettings] Failed to decrypt setting siliconflow_api_key. The value may need to be saved again. Error: Error while decrypting the ciphertext provided to safeStorage.decryptString.
+    at getSecureSettingStatus (/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/.vite/build/main-CLPBGtNN.js:37496:30)
+    at /Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/.vite/build/main-CLPBGtNN.js:37995:33
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:107296)
+    at Session.emit (node:events:519:28)
+[SecureSettings] Failed to decrypt setting siliconflow_api_key. The value may need to be saved again. Error: Error while decrypting the ciphertext provided to safeStorage.decryptString.
+    at getSecureSettingStatus (/Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/.vite/build/main-CLPBGtNN.js:37496:30)
+    at /Users/yanghaibin/VSCodeProject/Electron/desktop-starter-app/.vite/build/main-CLPBGtNN.js:37995:33
+    at Session.<anonymous> (node:electron/js2c/browser_init:2:107296)
+    at Session.emit (node:events:519:28)

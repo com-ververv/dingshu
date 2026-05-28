@@ -274,6 +274,27 @@
   color: var(--color-error);
 }
 
+.needs-attention {
+  color: var(--color-warning);
+}
+
+.credential-warning {
+  display: grid;
+  gap: 4px;
+  padding: 9px 10px;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--control-radius);
+  font-size: var(--text-sm);
+}
+
+.credential-warning small {
+  color: inherit;
+  opacity: 0.78;
+  overflow-wrap: anywhere;
+}
+
 .settings-action {
   margin-top: var(--space-md);
 }

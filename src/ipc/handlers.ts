@@ -12,7 +12,7 @@ import { getDatabaseInfo, migrateDatabase, getDefaultDatabasePath, saveDatabaseC
 import { registerChatIPCHandlers } from './chat';
 import {
   deleteSecureSetting,
-  hasSecureSetting,
+  getSecureSettingStatus,
   isSecureStorageAvailable,
   SECURE_SETTING_KEYS,
   setSecureSetting,
@@ -70,14 +70,25 @@ export function registerIPCHandlers(): void {
 
   ipcMain.handle('secureSettings:getStatus', async () => {
     try {
+      const siliconflowApiKey = getSecureSettingStatus(SECURE_SETTING_KEYS.siliconflowApiKey);
+      const larkAppId = getSecureSettingStatus(SECURE_SETTING_KEYS.larkAppId);
+      const larkAppSecret = getSecureSettingStatus(SECURE_SETTING_KEYS.larkAppSecret);
       return {
         success: true,
         data: {
-          larkAppIdConfigured: hasSecureSetting(SECURE_SETTING_KEYS.larkAppId),
-          larkAppSecretConfigured: hasSecureSetting(SECURE_SETTING_KEYS.larkAppSecret),
+          larkAppIdConfigured: larkAppId.configured,
+          larkAppIdHealthy: larkAppId.configured && larkAppId.decryptable,
+          larkAppSecretConfigured: larkAppSecret.configured,
+          larkAppSecretHealthy: larkAppSecret.configured && larkAppSecret.decryptable,
           larkAuth: getLarkAuthStatus(),
           safeStorageAvailable: isSecureStorageAvailable(),
-          siliconflowApiKeyConfigured: hasSecureSetting(SECURE_SETTING_KEYS.siliconflowApiKey),
+          siliconflowApiKeyConfigured: siliconflowApiKey.configured,
+          siliconflowApiKeyHealthy: siliconflowApiKey.configured && siliconflowApiKey.decryptable,
+          credentialErrors: {
+            larkAppId: larkAppId.error,
+            larkAppSecret: larkAppSecret.error,
+            siliconflowApiKey: siliconflowApiKey.error,
+          },
         },
       };
     } catch (error) {

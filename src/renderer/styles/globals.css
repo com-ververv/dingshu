@@ -330,6 +330,13 @@ body,
   color: var(--color-accent);
 }
 
+.sidebar-status-item small {
+  margin-left: auto;
+  color: inherit;
+  font-size: 11px;
+  opacity: 0.82;
+}
+
 .status-dot {
   width: 7px;
   height: 7px;

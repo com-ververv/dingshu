@@ -13,7 +13,7 @@ import {
   updateChatMessage,
   upsertToolEvent,
 } from '../database/chatRepository';
-import { getSecureSetting, SECURE_SETTING_KEYS } from '../database/secureSettingsRepository';
+import { getSecureSetting, getSecureSettingStatus, SECURE_SETTING_KEYS } from '../database/secureSettingsRepository';
 
 type ChatSendRequest = {
   assistantMessageId?: string;
@@ -38,6 +38,7 @@ type ChatStreamEvent =
   | (ChatToolEvent & { conversationId?: string });
 
 const activeControllers = new Map<string, AbortController>();
+const stoppedRequests = new Set<string>();
 
 function sendChatEvent(window: BrowserWindow | null, event: ChatStreamEvent): void {
   if (!window || window.isDestroyed()) {
@@ -67,6 +68,17 @@ function getRecoverableError(error: unknown): { code: string; message: string; r
 async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendRequest) {
   console.log(`[Chat] send request=${request.requestId} messages=${request.messages.length}`);
 
+  const apiKeyStatus = getSecureSettingStatus(SECURE_SETTING_KEYS.siliconflowApiKey);
+  if (apiKeyStatus.configured && !apiKeyStatus.decryptable) {
+    return {
+      success: false,
+      error: {
+        code: 'SILICONFLOW_API_KEY_UNREADABLE',
+        message: '已保存的 SiliconFlow API Key 无法解密，请在设置面板重新保存。',
+      },
+    };
+  }
+
   const apiKey = getSecureSetting(SECURE_SETTING_KEYS.siliconflowApiKey) ?? process.env.SILICONFLOW_API_KEY;
   if (!apiKey) {
     return {
@@ -90,6 +102,7 @@ async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendReques
 
   const window = BrowserWindow.fromWebContents(event.sender);
   const controller = new AbortController();
+  stoppedRequests.delete(request.requestId);
   activeControllers.set(request.requestId, controller);
   const lastUserContent = request.userMessage?.content ?? [...request.messages].reverse().find((message) => message.role === 'user')?.content ?? '';
   const conversation = ensureConversation(request.conversationId, lastUserContent);
@@ -140,18 +153,19 @@ async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendReques
       }
 
       const [finishReason, usage] = await Promise.all([result.finishReason, result.usage]);
+      const wasStopped = stoppedRequests.has(request.requestId);
       updateChatMessage({
         id: assistantMessageId,
         conversationId: conversation.id,
         content: assistantContent,
-        status: 'completed',
+        status: wasStopped ? 'cancelled' : 'completed',
       });
       console.log(`[Chat] done request=${request.requestId} deltas=${deltaCount} finishReason=${finishReason}`);
       sendChatEvent(window, {
         conversationId: conversation.id,
         requestId: request.requestId,
         type: 'done',
-        finishReason,
+        finishReason: wasStopped ? 'cancelled' : finishReason,
         usage,
       });
     } catch (error) {
@@ -172,6 +186,7 @@ async function handleChatSend(event: IpcMainInvokeEvent, request: ChatSendReques
       });
     } finally {
       activeControllers.delete(request.requestId);
+      stoppedRequests.delete(request.requestId);
     }
   })();
 
@@ -191,6 +206,7 @@ function handleChatStop(_: IpcMainInvokeEvent, requestId: string) {
   }
 
   controller.abort();
+  stoppedRequests.add(requestId);
   activeControllers.delete(requestId);
   return { success: true };
 }

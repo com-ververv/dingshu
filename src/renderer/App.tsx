@@ -196,18 +196,29 @@ function formatConversationTime(timestamp?: number): string {
 }
 
 function getConfigItems(status: SecureSettingsStatus | null) {
+  const larkAppReady = status?.larkAppIdHealthy === true && status?.larkAppSecretHealthy === true;
   return [
     {
       label: '模型',
-      ok: status?.siliconflowApiKeyConfigured === true,
+      detail:
+        status?.siliconflowApiKeyConfigured === true && status?.siliconflowApiKeyHealthy === false
+          ? '需重新保存'
+          : undefined,
+      ok: status?.siliconflowApiKeyHealthy === true,
     },
     {
       label: '飞书应用',
-      ok: status?.larkAppIdConfigured === true && status?.larkAppSecretConfigured === true,
+      detail:
+        (status?.larkAppIdConfigured === true && status?.larkAppIdHealthy === false) ||
+        (status?.larkAppSecretConfigured === true && status?.larkAppSecretHealthy === false)
+          ? '需重新保存'
+          : undefined,
+      ok: larkAppReady,
     },
     {
       label: '飞书授权',
-      ok: status?.larkAuth.configured === true,
+      detail: status?.larkAuth.configured === true && !larkAppReady ? '缺少应用凭证' : undefined,
+      ok: status?.larkAuth.configured === true && larkAppReady,
     },
   ];
 }
@@ -239,10 +250,10 @@ function getExternalLinkFromClick(event: MouseEvent<HTMLElement>): string | unde
 }
 
 function normalizeLoadedMessage(message: ChatMessage): ChatMessage {
-  const status = message.role === 'assistant' && message.status === 'streaming' ? 'failed' : message.status;
+  const status = message.role === 'assistant' && message.status === 'streaming' ? 'cancelled' : message.status;
   const error =
     message.role === 'assistant' && message.status === 'streaming'
-      ? message.error ?? '上次生成已中断，请重新发送。'
+      ? message.error ?? '上次生成已中断，可点击下方按钮重新发送上一条。'
       : message.error;
 
   return {
@@ -598,14 +609,15 @@ export default function App() {
   const mentionRequestRef = useRef(0);
 
   const isStreaming = activeRequestId !== null;
-  const canSend = input.trim().length > 0 && !isStreaming && secureStatus?.siliconflowApiKeyConfigured !== false;
+  const canSend = input.trim().length > 0 && !isStreaming && secureStatus?.siliconflowApiKeyHealthy !== false;
 
   const modelMessages = useMemo(() => getMessagesForModel(messages), [messages]);
   const filteredConversationGroups = useMemo(() => {
     const keyword = conversationSearch.trim().toLowerCase();
     const filtered = keyword
       ? conversations.filter((conversation) =>
-          `${conversation.title} ${conversation.lastMessagePreview ?? ''}`.toLowerCase().includes(keyword)
+          `${conversation.title} ${conversation.lastMessagePreview ?? ''}`.toLowerCase().includes(keyword) ||
+          conversation.id === conversationId
         )
       : conversations;
     const groups = new Map<string, ChatConversationSummary[]>();
@@ -616,7 +628,7 @@ export default function App() {
     return ['今天', '昨天', '近 7 天', '近 30 天', '更早']
       .map((label) => ({ label, conversations: groups.get(label) ?? [] }))
       .filter((group) => group.conversations.length > 0);
-  }, [conversationSearch, conversations]);
+  }, [conversationId, conversationSearch, conversations]);
   const configItems = useMemo(() => getConfigItems(secureStatus), [secureStatus]);
   const hasPendingApproval = messages.some((message) =>
     message.toolEvents?.some((event) => event.status === 'pending_confirmation')
@@ -715,6 +727,13 @@ export default function App() {
     setConversations((current) =>
       current.map((conversation) => (conversation.id === targetConversationId ? result.data! : conversation))
     );
+    if (targetConversationId === conversationId) {
+      const keyword = conversationSearch.trim().toLowerCase();
+      const searchable = `${result.data.title} ${result.data.lastMessagePreview ?? ''}`.toLowerCase();
+      if (keyword && !searchable.includes(keyword)) {
+        setConversationSearch('');
+      }
+    }
     cancelRenameConversation();
     await refreshConversations(conversationId ?? undefined);
   }
@@ -824,17 +843,18 @@ export default function App() {
         return;
       }
       const messageId = streamingMessageIdRef.current;
+      const wasCancelled = event.finishReason === 'cancelled';
       setMessages((current) =>
         current.map((message) =>
           message.id === messageId
             ? {
                 ...message,
-                status: message.status === 'cancelled' ? 'cancelled' : 'completed',
+                status: wasCancelled || message.status === 'cancelled' ? 'cancelled' : 'completed',
               }
             : message
         )
       );
-      setStatusText(event.finishReason ? `已完成：${event.finishReason}` : '已完成');
+      setStatusText(wasCancelled ? '已停止' : '已完成');
       activeRequestIdRef.current = null;
       streamingMessageIdRef.current = null;
       setActiveRequestId(null);
@@ -1058,8 +1078,12 @@ export default function App() {
     if (trimmed.startsWith('/') && runSlashCommand(trimmed)) {
       return;
     }
-    if (secureStatus?.siliconflowApiKeyConfigured === false) {
-      toast.error('请先在设置面板保存 SiliconFlow API Key');
+    if (secureStatus?.siliconflowApiKeyHealthy === false) {
+      const message =
+        secureStatus.siliconflowApiKeyConfigured === true
+          ? '已保存的 SiliconFlow API Key 无法解密，请重新保存'
+          : '请先在设置面板保存 SiliconFlow API Key';
+      toast.error(message);
       setShowSettings(true);
       return;
     }
@@ -1302,6 +1326,7 @@ export default function App() {
               <div key={item.label} className={`sidebar-status-item ${item.ok ? 'is-ok' : 'is-missing'}`}>
                 {item.ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
                 <span>{item.label}</span>
+                {item.detail ? <small>{item.detail}</small> : null}
               </div>
             ))}
             <div className={`sidebar-status-item ${hasPendingApproval ? 'is-waiting' : isStreaming ? 'is-running' : 'is-ok'}`}>
@@ -1372,11 +1397,13 @@ export default function App() {
         </aside>
 
         <section className="chat-thread" aria-label="Chat messages" data-testid="chat-thread">
-          {secureStatus?.siliconflowApiKeyConfigured === false ? (
+          {secureStatus?.siliconflowApiKeyHealthy === false ? (
             <div className="config-warning">
               <div>
-                <strong>缺少 SiliconFlow API Key</strong>
-                <span>请在设置面板保存后再开始聊天。</span>
+                <strong>
+                  {secureStatus.siliconflowApiKeyConfigured ? 'SiliconFlow API Key 无法读取' : '缺少 SiliconFlow API Key'}
+                </strong>
+                <span>{secureStatus.siliconflowApiKeyConfigured ? '请重新保存 API Key 后再开始聊天。' : '请在设置面板保存后再开始聊天。'}</span>
               </div>
               <button type="button" className="primary-button" onClick={() => setShowSettings(true)}>
                 打开设置

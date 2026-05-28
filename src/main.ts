@@ -32,6 +32,31 @@ const DEFAULT_WINDOW_STATE: WindowState = {
   isMaximized: false,
 };
 
+function getVisibleWindowState(state: WindowState): WindowState {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { x, y, width, height } = primaryDisplay.workArea;
+  const nextWidth = Math.min(Math.max(state.width || DEFAULT_WINDOW_STATE.width, DEFAULT_WINDOW_STATE.width), width);
+  const nextHeight = Math.min(Math.max(state.height || DEFAULT_WINDOW_STATE.height, DEFAULT_WINDOW_STATE.height), height);
+  const displays = screen.getAllDisplays();
+  const hasPosition = state.x !== undefined && state.y !== undefined;
+  const isOnScreen =
+    hasPosition &&
+    displays.some((display) => {
+      const centerX = state.x! + nextWidth / 2;
+      const centerY = state.y! + nextHeight / 2;
+      const bounds = display.bounds;
+      return centerX >= bounds.x && centerX < bounds.x + bounds.width && centerY >= bounds.y && centerY < bounds.y + bounds.height;
+    });
+
+  return {
+    ...state,
+    x: isOnScreen ? state.x : Math.round(x + (width - nextWidth) / 2),
+    y: isOnScreen ? state.y : Math.round(y + (height - nextHeight) / 2),
+    width: nextWidth,
+    height: nextHeight,
+  };
+}
+
 function getWindowStateFilePath(): string {
   return path.join(app.getPath('userData'), 'window-state.json');
 }
@@ -43,32 +68,7 @@ function loadWindowState(): WindowState {
       const data = fs.readFileSync(filePath, 'utf-8');
       const state = JSON.parse(data) as WindowState;
 
-      // Validate that the window position is still on a visible display
-      if (state.x !== undefined && state.y !== undefined) {
-        const displays = screen.getAllDisplays();
-        const windowBounds = {
-          x: state.x,
-          y: state.y,
-          width: state.width,
-          height: state.height,
-        };
-
-        // Check if window center is within any display
-        const centerX = windowBounds.x + windowBounds.width / 2;
-        const centerY = windowBounds.y + windowBounds.height / 2;
-
-        const isOnScreen = displays.some((display) => {
-          const { x, y, width, height } = display.bounds;
-          return centerX >= x && centerX < x + width && centerY >= y && centerY < y + height;
-        });
-
-        if (!isOnScreen) {
-          // Window would be off-screen, reset position but keep size
-          return { ...state, x: undefined, y: undefined };
-        }
-      }
-
-      return state;
+      return getVisibleWindowState(state);
     }
   } catch (error) {
     console.error('[App] Failed to load window state:', error);
@@ -128,13 +128,10 @@ const createWindow = (): void => {
     },
     titleBarStyle: 'hiddenInset',
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1a1a1a' : '#ffffff',
-    show: true,
+    show: false,
   });
 
-  // Restore maximized state if applicable
-  if (windowState.isMaximized) {
-    mainWindow.maximize();
-  }
+  console.log('[App] Main window created:', mainWindow.getBounds());
 
   // Track window state changes
   const saveCurrentState = () => {
@@ -176,13 +173,29 @@ const createWindow = (): void => {
   }
 
   mainWindow.once('ready-to-show', () => {
+    if (windowState.isMaximized) {
+      mainWindow?.maximize();
+    }
     mainWindow?.show();
     mainWindow?.focus();
+    console.log('[App] Main window ready-to-show:', {
+      bounds: mainWindow?.getBounds(),
+      visible: mainWindow?.isVisible(),
+      minimized: mainWindow?.isMinimized(),
+    });
   });
 
   mainWindow.webContents.once('did-finish-load', () => {
+    if (windowState.isMaximized) {
+      mainWindow?.maximize();
+    }
     mainWindow?.show();
     mainWindow?.focus();
+    console.log('[App] Main window did-finish-load:', {
+      bounds: mainWindow?.getBounds(),
+      visible: mainWindow?.isVisible(),
+      minimized: mainWindow?.isMinimized(),
+    });
   });
 
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
@@ -216,6 +229,11 @@ const createWindow = (): void => {
 
 // Build application menu
 const buildMenu = (): void => {
+  if (!app.isPackaged) {
+    Menu.setApplicationMenu(null);
+    return;
+  }
+
   const isMac = process.platform === 'darwin';
 
   const template: Electron.MenuItemConstructorOptions[] = [

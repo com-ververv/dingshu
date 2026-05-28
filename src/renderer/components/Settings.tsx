@@ -18,6 +18,16 @@ interface SettingsProps {
   onClose: () => void;
 }
 
+function getCredentialState(configured?: boolean, healthy?: boolean) {
+  if (configured && healthy) {
+    return { className: 'configured', label: '已配置' };
+  }
+  if (configured && healthy === false) {
+    return { className: 'needs-attention', label: '需重新保存' };
+  }
+  return { className: 'not-configured', label: '未配置' };
+}
+
 export function Settings({ onClose }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<'ai' | 'lark' | 'storage' | 'about'>('ai');
 
@@ -86,6 +96,15 @@ export function Settings({ onClose }: SettingsProps) {
     read: larkCapabilities.filter((capability) => capability.risk === 'read').length,
     write: larkCapabilities.filter((capability) => capability.risk === 'write').length,
   };
+  const siliconflowState = getCredentialState(
+    secureStatus?.siliconflowApiKeyConfigured,
+    secureStatus?.siliconflowApiKeyHealthy
+  );
+  const larkAppIdState = getCredentialState(secureStatus?.larkAppIdConfigured, secureStatus?.larkAppIdHealthy);
+  const larkAppSecretState = getCredentialState(
+    secureStatus?.larkAppSecretConfigured,
+    secureStatus?.larkAppSecretHealthy
+  );
 
   const handleSaveCredentials = async () => {
     setSavingCredentials(true);
@@ -259,10 +278,16 @@ export function Settings({ onClose }: SettingsProps) {
               </div>
               <div className="credential-row">
                 <span>API Key</span>
-                <span className={secureStatus?.siliconflowApiKeyConfigured ? 'configured' : 'not-configured'}>
-                  {secureStatus?.siliconflowApiKeyConfigured ? '已配置' : '未配置'}
-                </span>
+                <span className={siliconflowState.className}>{siliconflowState.label}</span>
               </div>
+              {secureStatus?.siliconflowApiKeyConfigured && !secureStatus.siliconflowApiKeyHealthy ? (
+                <div className="credential-warning">
+                  已保存的 API Key 无法读取，请重新保存。
+                  {secureStatus.credentialErrors.siliconflowApiKey ? (
+                    <small>{secureStatus.credentialErrors.siliconflowApiKey}</small>
+                  ) : null}
+                </div>
+              ) : null}
               <input
                 type="password"
                 value={siliconflowApiKey}
@@ -288,10 +313,14 @@ export function Settings({ onClose }: SettingsProps) {
               <div className="credential-grid">
                 <div className="credential-row">
                   <span>App ID</span>
-                  <span className={secureStatus?.larkAppIdConfigured ? 'configured' : 'not-configured'}>
-                    {secureStatus?.larkAppIdConfigured ? '已配置' : '未配置'}
-                  </span>
+                  <span className={larkAppIdState.className}>{larkAppIdState.label}</span>
                 </div>
+                {secureStatus?.larkAppIdConfigured && !secureStatus.larkAppIdHealthy ? (
+                  <div className="credential-warning">
+                    已保存的 App ID 无法读取，请重新保存。
+                    {secureStatus.credentialErrors.larkAppId ? <small>{secureStatus.credentialErrors.larkAppId}</small> : null}
+                  </div>
+                ) : null}
                 <input
                   type="password"
                   value={larkAppId}
@@ -301,10 +330,16 @@ export function Settings({ onClose }: SettingsProps) {
                 />
                 <div className="credential-row">
                   <span>App Secret</span>
-                  <span className={secureStatus?.larkAppSecretConfigured ? 'configured' : 'not-configured'}>
-                    {secureStatus?.larkAppSecretConfigured ? '已配置' : '未配置'}
-                  </span>
+                  <span className={larkAppSecretState.className}>{larkAppSecretState.label}</span>
                 </div>
+                {secureStatus?.larkAppSecretConfigured && !secureStatus.larkAppSecretHealthy ? (
+                  <div className="credential-warning">
+                    已保存的 App Secret 无法读取，请重新保存。
+                    {secureStatus.credentialErrors.larkAppSecret ? (
+                      <small>{secureStatus.credentialErrors.larkAppSecret}</small>
+                    ) : null}
+                  </div>
+                ) : null}
                 <input
                   type="password"
                   value={larkAppSecret}
@@ -441,8 +476,7 @@ export function Settings({ onClose }: SettingsProps) {
             <section className="settings-section about-section">
               <h3>About</h3>
               <p className="about-text">
-                Desktop Starter App is a template for building production-ready Electron applications with React and
-                TypeScript.
+                Pexar Lark Agent 是桌面端飞书 AI 助手，可通过自然语言搜索文档、查询消息、创建文档和发送消息，并在写操作前提供应用内二次确认。
               </p>
               <p className="version-text">Version {appVersion}</p>
               <div className="about-links">

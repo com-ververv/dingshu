@@ -27,13 +27,17 @@ export interface SettingsAPI {
 
 export interface SecureSettingsStatus {
   larkAppIdConfigured: boolean;
+  larkAppIdHealthy: boolean;
   larkAppSecretConfigured: boolean;
+  larkAppSecretHealthy: boolean;
   larkAuth: {
     configured: boolean;
     profilePath: string;
   };
   safeStorageAvailable: boolean;
   siliconflowApiKeyConfigured: boolean;
+  siliconflowApiKeyHealthy: boolean;
+  credentialErrors: Partial<Record<'larkAppId' | 'larkAppSecret' | 'siliconflowApiKey', string>>;
 }
 
 export interface SecureSettingsAPI {

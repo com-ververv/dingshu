@@ -26,7 +26,38 @@ const ok = <T>(data: T): IPCResponse<T> => ({ success: true, data });
 
 function createE2EChatAPI(): ChatAPI {
   let conversationCounter = 0;
-  const conversations = new Map<string, ChatConversationDetail>();
+  const now = Date.now();
+  const conversations = new Map<string, ChatConversationDetail>([
+    [
+      'e2e-interrupted',
+      {
+        id: 'e2e-interrupted',
+        title: '中断恢复会话',
+        lastMessageAt: now - 1000,
+        lastMessagePreview: '上次生成已中断，可点击下方按钮重新发送上一条。',
+        createdAt: now - 2000,
+        updatedAt: now - 1000,
+        messages: [
+          {
+            id: 'e2e-interrupted-user',
+            role: 'user',
+            content: '请生成一段长内容',
+            status: 'completed',
+            createdAt: now - 2000,
+            updatedAt: now - 2000,
+          },
+          {
+            id: 'e2e-interrupted-assistant',
+            role: 'assistant',
+            content: '正在连接模型...',
+            status: 'streaming',
+            createdAt: now - 1500,
+            updatedAt: now - 1000,
+          },
+        ],
+      },
+    ],
+  ]);
   let pendingApproval:
     | {
         conversationId: string;
@@ -82,7 +113,9 @@ function createE2EChatAPI(): ChatAPI {
       const now = Date.now();
       const conversationId = request.conversationId ?? `e2e-conversation-${++conversationCounter}`;
       const assistantMessageId = request.assistantMessageId ?? `e2e-assistant-${conversationCounter}`;
-      const isApprovalFlow = userContent.includes('审批拒绝');
+      const isApprovalFlow =
+        userContent.includes('审批拒绝') || userContent.includes('创建飞书文档') || userContent.includes('发送飞书消息');
+      const isSendApproval = userContent.includes('发送飞书消息');
       const response = `E2E mock response for: ${userContent}`;
 
       conversations.set(conversationId, {
@@ -118,6 +151,7 @@ function createE2EChatAPI(): ChatAPI {
         if (isApprovalFlow) {
           const toolCallId = `e2e-tool-${conversationCounter}`;
           const approvalId = `e2e-approval-${conversationCounter}`;
+          const toolName = isSendApproval ? 'lark_message_send' : 'lark_doc_create';
           pendingApproval = {
             conversationId,
             requestId: request.requestId,
@@ -125,15 +159,19 @@ function createE2EChatAPI(): ChatAPI {
           };
           listeners.toolCallConfirmationRequired.forEach((listener) =>
             listener({
-              action: '创建飞书云文档',
+              action: isSendApproval ? '发送飞书消息' : '创建飞书云文档',
               approvalId,
               conversationId,
-              inputPreview: '{"title":"E2E审批拒绝","contentPreview":"E2E"}',
+              inputPreview: isSendApproval
+                ? '{"chat":"研发群","content":"E2E消息"}'
+                : '{"title":"E2E审批拒绝","contentPreview":"E2E"}',
               requestId: request.requestId,
-              riskSummary: '这会使用你的飞书账号创建一篇新的云文档。',
-              targetPreview: 'E2E审批拒绝',
+              riskSummary: isSendApproval
+                ? '这会使用飞书机器人向目标群发送消息。'
+                : '这会使用你的飞书账号创建一篇新的云文档。',
+              targetPreview: isSendApproval ? '研发群' : 'E2E审批拒绝',
               toolCallId,
-              toolName: 'lark_doc_create',
+              toolName,
               type: 'tool-call-confirmation-required',
             })
           );
@@ -246,17 +284,27 @@ export function installE2EMockApi(): void {
       getAll: async () => ok({}),
     },
     secureSettings: {
-      getStatus: async () =>
-        ok({
-          larkAppIdConfigured: true,
-          larkAppSecretConfigured: true,
+      getStatus: async () => {
+        const healthy = window.localStorage.getItem('e2eSecureStatus') === 'healthy';
+        return ok({
+          larkAppIdConfigured: healthy,
+          larkAppIdHealthy: healthy,
+          larkAppSecretConfigured: healthy,
+          larkAppSecretHealthy: healthy,
           larkAuth: {
             configured: true,
             profilePath: 'e2e/mock-lark-profile',
           },
           safeStorageAvailable: true,
           siliconflowApiKeyConfigured: true,
-        }),
+          siliconflowApiKeyHealthy: healthy,
+          credentialErrors: healthy
+            ? {}
+            : {
+                siliconflowApiKey: 'mock decrypt failed',
+              },
+        });
+      },
       saveCredentials: async () => ok(undefined),
       clearCredential: async () => ok(undefined),
     },

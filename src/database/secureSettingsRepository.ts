@@ -13,6 +13,12 @@ type SecureSettingRow = {
   encrypted_value: Buffer;
 };
 
+export type SecureSettingStatus = {
+  configured: boolean;
+  decryptable: boolean;
+  error?: string;
+};
+
 export function isSecureStorageAvailable(): boolean {
   return safeStorage.isEncryptionAvailable();
 }
@@ -51,6 +57,25 @@ export function getSecureSetting(key: SecureSettingKey): string | null {
   } catch (error) {
     console.warn(`[SecureSettings] Failed to decrypt setting ${key}. The value may need to be saved again.`, error);
     return null;
+  }
+}
+
+export function getSecureSettingStatus(key: SecureSettingKey): SecureSettingStatus {
+  const row = getDatabase()
+    .prepare('SELECT encrypted_value FROM secure_settings WHERE key = ?')
+    .get(key) as SecureSettingRow | undefined;
+
+  if (!row) {
+    return { configured: false, decryptable: false };
+  }
+
+  try {
+    safeStorage.decryptString(row.encrypted_value);
+    return { configured: true, decryptable: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[SecureSettings] Failed to decrypt setting ${key}. The value may need to be saved again.`, error);
+    return { configured: true, decryptable: false, error: message };
   }
 }
 
