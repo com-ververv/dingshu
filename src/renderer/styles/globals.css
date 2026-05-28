@@ -3033,3 +3033,34 @@ body {
 .codex-side-card {
   box-shadow: 0 12px 28px rgb(0 0 0 / 0.05);
 }
+
+/* Codex desktop parity pass: composer control alignment */
+.chat-composer textarea {
+  padding-bottom: 34px;
+}
+
+.composer-actions {
+  right: 8px;
+  bottom: 30px;
+}
+
+.composer-actions .secondary-button {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+}
+
+.composer-actions .primary-button,
+.composer-actions .stop-button {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+}
+
+.composer-status-row {
+  margin-top: -31px;
+  padding-top: 6px;
+  padding-left: 17px;
+  padding-right: 124px;
+}
