@@ -776,3 +776,43 @@
   border-color: #8d9297;
   opacity: 1;
 }
+
+/* Codex desktop parity pass: settings content width */
+.settings-content {
+  padding: 66px 0 72px 110px;
+}
+
+.settings-section {
+  max-width: 760px;
+}
+
+.section-description,
+.db-status,
+.credential-row,
+.settings-section > input,
+.credential-grid > input,
+.migration-section,
+.auth-section {
+  max-width: 760px;
+}
+
+@media (max-width: 1500px) {
+  .settings-body {
+    grid-template-columns: 262px minmax(0, 1fr);
+  }
+
+  .settings-content {
+    padding-left: 86px;
+  }
+
+  .settings-section,
+  .section-description,
+  .db-status,
+  .credential-row,
+  .settings-section > input,
+  .credential-grid > input,
+  .migration-section,
+  .auth-section {
+    max-width: 610px;
+  }
+}
