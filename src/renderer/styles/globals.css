@@ -3562,9 +3562,9 @@ body {
 }
 
 .conversation-item.is-active > button:first-child {
-  min-height: 42px;
-  padding-top: 5px !important;
-  padding-bottom: 5px !important;
+  min-height: 38px;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
 }
 
 .conversation-item.is-active .conversation-preview {
