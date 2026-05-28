@@ -3255,3 +3255,17 @@ body {
   color: transparent !important;
   font-size: 0 !important;
 }
+
+/* Codex desktop parity pass: bottom composer placement */
+.chat-composer {
+  width: min(720px, calc(100% - 138px));
+  padding-bottom: 30px;
+}
+
+.composer-input-wrap {
+  min-height: 86px;
+}
+
+.chat-composer textarea {
+  min-height: 86px;
+}
