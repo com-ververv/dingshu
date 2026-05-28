@@ -1375,29 +1375,29 @@ export default function App() {
           <div className="sidebar-window-spacer" aria-hidden="true" />
           <nav className="sidebar-primary-nav" aria-label="Primary navigation">
             <button type="button" onClick={startNewConversation} disabled={isStreaming}>
-              <PenLine size={18} />
+              <PenLine size={16} />
               <span>New chat</span>
             </button>
             <button type="button" onClick={() => conversationSearchRef.current?.focus()}>
-              <Search size={18} />
+              <Search size={16} />
               <span>Search</span>
             </button>
             <button type="button" onClick={() => setShowSettings(true)}>
-              <Box size={18} />
+              <Box size={16} />
               <span>Skills</span>
             </button>
             <button type="button" disabled>
-              <Plug size={18} />
+              <Plug size={16} />
               <span>Plugins</span>
             </button>
             <button type="button" disabled>
-              <Clock size={18} />
+              <Clock size={16} />
               <span>Automations</span>
             </button>
           </nav>
           <div className="sidebar-section-label">Projects</div>
           <div className="sidebar-project-title">
-            <Folder size={17} />
+            <Folder size={16} />
             <span>desktop-starter-app</span>
           </div>
           <div className="conversation-sidebar-header">
@@ -1500,7 +1500,7 @@ export default function App() {
             )}
           </div>
           <button type="button" className="sidebar-settings-entry" onClick={() => setShowSettings(true)}>
-            <Settings size={18} />
+            <Settings size={16} />
             <span>Settings</span>
           </button>
         </aside>

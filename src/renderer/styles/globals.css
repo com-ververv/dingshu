@@ -2022,18 +2022,18 @@ body {
 
 .sidebar-primary-nav {
   gap: 0;
-  padding: 8px 14px 26px 14px;
+  padding: 8px 14px 24px;
 }
 
 .sidebar-primary-nav button,
 .sidebar-settings-entry {
-  min-height: 31px;
-  padding: 0 10px;
-  gap: 10px;
+  min-height: 30px;
+  padding: 0 9px;
+  gap: 9px;
   color: #373d42;
   border-radius: 8px;
-  font-size: 15px;
-  font-weight: 450;
+  font-size: 14px;
+  font-weight: 440;
   letter-spacing: 0;
 }
 
@@ -2055,24 +2055,24 @@ body {
 }
 
 .sidebar-section-label {
-  padding: 0 16px 12px;
+  padding: 0 16px 11px;
   color: #9aa1a6;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 480;
 }
 
 .sidebar-project-title {
-  min-height: 32px;
-  padding: 0 16px 11px;
+  min-height: 30px;
+  padding: 0 16px 10px;
   color: #6a7176;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .conversation-sidebar-header {
-  min-height: 29px;
+  min-height: 28px;
   padding: 0 14px;
   color: #9aa1a6;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .conversation-sidebar-header button {
@@ -2098,7 +2098,7 @@ body {
 
 .sidebar-search input {
   color: #4d555b;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .conversation-list {
@@ -2113,13 +2113,13 @@ body {
 }
 
 .conversation-item {
-  min-height: 37px;
+  min-height: 36px;
   border-radius: 9px;
 }
 
 .conversation-item > button:first-child {
-  min-height: 37px;
-  padding: 5px 43px 5px 10px;
+  min-height: 36px;
+  padding: 4px 43px 4px 10px;
 }
 
 .conversation-item:hover {
@@ -2132,14 +2132,14 @@ body {
 
 .conversation-title {
   color: #33383d;
-  font-size: 14px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 640;
 }
 
 .conversation-preview,
 .conversation-time {
   color: #8b9297;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .conversation-time {
