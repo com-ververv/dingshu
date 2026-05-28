@@ -3256,6 +3256,33 @@ body {
   font-size: 0 !important;
 }
 
+/* Codex desktop parity pass: chat preview density */
+.conversation-item > button:first-child {
+  min-height: 42px;
+}
+
+.conversation-preview {
+  display: block;
+  max-width: calc(100% - 10px);
+  color: #98a0a5;
+  font-size: 12px;
+  font-weight: 420;
+  line-height: 1.25;
+}
+
+.conversation-title {
+  max-width: calc(100% - 4px);
+}
+
+.conversation-item.is-active .conversation-preview {
+  color: #7f878d;
+}
+
+.conversation-item:not(.is-active) > button:first-child {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
 /* Codex desktop parity pass: bottom composer placement */
 .chat-composer {
   width: min(720px, calc(100% - 138px));
