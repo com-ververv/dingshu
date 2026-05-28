@@ -523,52 +523,42 @@ function ArtifactPanel({
     <aside className="artifact-panel" aria-label="Document artifact preview">
       <section className="codex-side-card">
         <div className="codex-card-header">
-          <h2>{showProgress ? 'Progress' : 'Environment'}</h2>
+          <h2>Environment</h2>
           <button type="button" onClick={onToggle} title="收起预览">
-            {showProgress ? <PanelRightOpen size={16} /> : <Settings size={16} />}
+            <Settings size={16} />
           </button>
         </div>
         {showProgress ? (
           <>
-            <div className="progress-list">
-              <div className="progress-item is-active">
-                <span className="progress-dot" />
-                <span>{isStreaming ? '正在处理当前请求' : hasPendingApproval ? '等待确认工具调用' : '飞书调用已完成'}</span>
-              </div>
-              <div className="progress-item">
-                <span className="progress-dot" />
-                <span>{hasPendingApproval ? '工具调用待确认' : '无待确认工具调用'}</span>
-              </div>
-              <div className="progress-item">
-                <span className="progress-dot" />
-                <span>{activeArtifact ? 'Artifact 已生成' : '暂无 Artifact'}</span>
-              </div>
-            </div>
-            <div className="side-card-divider" />
-            <div className="codex-card-section-title">Environment</div>
             <div className="environment-list">
-              <div className="environment-item">
-                <CheckCircle2 size={14} />
-                <span>模型</span>
+              <div className="environment-item environment-changes">
+                <FileText size={14} />
+                <span>Changes</span>
+                <small className="change-addition">+{gitDiffStats.additions.toLocaleString()}</small>
+                <small className="change-deletion">-{gitDiffStats.deletions.toLocaleString()}</small>
               </div>
               <div className="environment-item">
-                <Info size={14} />
-                <span>飞书应用</span>
+                <Laptop size={14} />
+                <span>Local</span>
               </div>
               <div className="environment-item">
-                <Info size={14} />
-                <span>飞书授权</span>
+                <GitBranch size={14} />
+                <span>codex/siliconflow-ai-sdk-demo</span>
               </div>
               <div className="environment-item">
-                <Folder size={14} />
-                <span>desktop-starter-app</span>
+                <ExternalLink size={14} />
+                <span>Push</span>
+              </div>
+              <div className="environment-item">
+                <Github size={14} />
+                <span>Create pull request</span>
               </div>
             </div>
             <div className="side-card-divider" />
             <div className="codex-card-section-title">Sources</div>
             <div className="environment-item">
-              <Bot size={14} />
-              <span>SiliconFlow Kimi-K2.6</span>
+              <Info size={14} />
+              <span>No sources yet</span>
             </div>
           </>
         ) : (
