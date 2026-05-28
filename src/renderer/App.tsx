@@ -16,6 +16,7 @@ import {
   FileText,
   Folder,
   GitBranch,
+  GitCommitHorizontal,
   Github,
   Info,
   Laptop,
@@ -511,6 +512,7 @@ function ArtifactPanel({
   }
 
   const activeArtifact = artifacts[0];
+  const hasGitChanges = gitDiffStats.additions > 0 || gitDiffStats.deletions > 0;
 
   return (
     <aside className="artifact-panel" aria-label="Document artifact preview">
@@ -537,8 +539,8 @@ function ArtifactPanel({
             <span>codex/siliconflow-ai-sdk-demo</span>
           </div>
           <div className="environment-item">
-            <ExternalLink size={14} />
-            <span>Push</span>
+            {hasGitChanges ? <GitCommitHorizontal size={14} /> : <ExternalLink size={14} />}
+            <span>{hasGitChanges ? 'Commit' : 'Push'}</span>
           </div>
           <div className="environment-item">
             <Github size={14} />
