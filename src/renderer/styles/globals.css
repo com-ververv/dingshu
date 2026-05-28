@@ -2691,7 +2691,7 @@ body {
 
 /* Codex desktop parity pass: normalize for the Electron test viewport */
 :root {
-  --codex-sidebar-width: 282px;
+  --codex-sidebar-width: 292px;
   --codex-right-card-width: 330px;
   --codex-header-height: 46px;
 }
