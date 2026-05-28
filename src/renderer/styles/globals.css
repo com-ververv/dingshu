@@ -3269,3 +3269,18 @@ body {
 .chat-composer textarea {
   min-height: 86px;
 }
+
+/* Codex desktop parity pass: composer model spacing */
+.composer-status-row {
+  gap: 14px;
+  padding-right: 116px;
+}
+
+.composer-model {
+  margin-left: auto;
+  margin-right: 3px;
+}
+
+.composer-model + span {
+  margin-left: 5px;
+}

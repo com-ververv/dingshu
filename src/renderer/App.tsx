@@ -1745,6 +1745,7 @@ export default function App() {
             <span className="composer-goal"><Crosshair size={14} />Goal</span>
             <span className="composer-model">Pexar</span>
             <span>5.5</span>
+            <span>High</span>
           </div>
         </form>
 
