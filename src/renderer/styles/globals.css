@@ -2347,8 +2347,8 @@ body {
 }
 
 .codex-side-card {
-  gap: 16px;
-  padding: 19px 19px 21px;
+  gap: 15px;
+  padding: 18px 18px 20px;
   border-color: #e9ecee;
   border-radius: 18px;
   box-shadow: 0 13px 30px rgb(0 0 0 / 0.07);
@@ -2357,7 +2357,7 @@ body {
 .codex-card-header h2,
 .codex-card-section-title {
   color: #8d9499;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -2367,14 +2367,14 @@ body {
 
 .progress-list,
 .environment-list {
-  gap: 12px;
+  gap: 10px;
 }
 
 .progress-item,
 .environment-item {
-  min-height: 29px;
+  min-height: 27px;
   color: #676f75;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.35;
 }
 
@@ -2410,8 +2410,8 @@ body {
 }
 
 .progress-dot {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   border-color: #a8afb4;
 }
 
