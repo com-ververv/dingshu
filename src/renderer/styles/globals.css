@@ -2688,3 +2688,246 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Codex desktop parity pass: normalize for the Electron test viewport */
+:root {
+  --codex-sidebar-width: 282px;
+  --codex-right-card-width: 330px;
+  --codex-header-height: 46px;
+}
+
+.app-header {
+  min-height: var(--codex-header-height);
+  padding: 0 18px 0 17px;
+}
+
+.app-title {
+  font-size: 14px;
+}
+
+.header-more-button {
+  width: 26px;
+  min-height: 24px;
+  font-size: 16px;
+}
+
+.header-tool-button,
+.settings-button {
+  width: 28px;
+  min-height: 28px;
+  border-radius: 9px;
+}
+
+.sidebar-window-spacer {
+  height: 49px;
+}
+
+.sidebar-primary-nav {
+  padding: 8px 14px 22px;
+}
+
+.sidebar-primary-nav button,
+.sidebar-settings-entry {
+  min-height: 30px;
+  padding: 0 9px;
+  gap: 9px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+.sidebar-primary-nav button svg,
+.sidebar-settings-entry svg,
+.sidebar-project-title svg,
+.sidebar-pinned-entry svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sidebar-section-label {
+  padding: 0 16px 11px;
+  font-size: 13px;
+}
+
+.sidebar-project-title,
+.sidebar-pinned-entry {
+  min-height: 30px;
+  padding: 0 16px 10px;
+  gap: 9px;
+  font-size: 14px;
+}
+
+.sidebar-pinned-entry {
+  padding-bottom: 24px;
+}
+
+.conversation-sidebar-header {
+  min-height: 28px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.conversation-sidebar-header button {
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.sidebar-search {
+  min-height: 32px;
+  margin: 0 14px 12px;
+  padding: 0 9px;
+}
+
+.sidebar-search input {
+  font-size: 13px;
+}
+
+.conversation-list {
+  padding: 0 8px 14px;
+}
+
+.conversation-group h3 {
+  padding: 7px 8px 5px;
+  font-size: 12px;
+}
+
+.conversation-item {
+  min-height: 34px;
+  border-radius: 10px;
+}
+
+.conversation-item > button:first-child {
+  min-height: 34px;
+  padding: 6px 66px 6px 10px;
+}
+
+.conversation-title {
+  font-size: 14px;
+}
+
+.conversation-time {
+  top: 7px;
+  right: 10px;
+  width: 64px;
+  font-size: 13px;
+}
+
+.sidebar-settings-entry {
+  margin: auto 14px 15px;
+}
+
+.message-list {
+  width: min(820px, calc(100% - 56px));
+  padding: 30px 0 128px;
+}
+
+.chat-message {
+  margin-bottom: 18px;
+}
+
+.chat-message.is-user .message-body,
+.chat-message.is-user .message-content {
+  max-width: 560px;
+}
+
+.chat-message.is-user .message-content,
+.chat-message.is-assistant .message-content {
+  font-size: 14px;
+}
+
+.message-meta,
+.tool-event-status,
+.tool-event-elapsed {
+  font-size: 12px;
+}
+
+.tool-event-summary span,
+.tool-event summary {
+  font-size: 12px;
+}
+
+.tool-event summary {
+  min-height: 25px;
+  padding: 4px 2px;
+}
+
+.tool-event-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.artifact-panel {
+  padding: 62px 18px 24px 10px;
+}
+
+.codex-side-card {
+  gap: 15px;
+  padding: 18px 18px 20px;
+  border-radius: 18px;
+}
+
+.codex-card-header h2,
+.codex-card-section-title {
+  font-size: 14px;
+}
+
+.progress-list,
+.environment-list {
+  gap: 10px;
+}
+
+.progress-item,
+.environment-item,
+.environment-item small {
+  min-height: 27px;
+  font-size: 14px;
+}
+
+.chat-composer {
+  width: min(820px, calc(100% - 56px));
+  padding-bottom: 22px;
+}
+
+.composer-input-wrap {
+  min-height: 96px;
+  border-radius: 18px;
+}
+
+.chat-composer textarea {
+  min-height: 96px;
+  padding: 16px 104px 39px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+}
+
+.composer-actions {
+  right: 10px;
+  bottom: 39px;
+}
+
+.composer-actions .secondary-button {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+}
+
+.composer-actions .primary-button,
+.composer-actions .stop-button {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
+.composer-status-row {
+  min-height: 34px;
+  margin-top: -35px;
+  padding: 9px 18px 0;
+  padding-right: 148px;
+  gap: 15px;
+  font-size: 12px;
+}
+
+.composer-model {
+  padding: 8px 12px;
+}
