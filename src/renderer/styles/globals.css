@@ -3366,3 +3366,27 @@ body {
 .tool-event-detail {
   padding: 8px 12px 12px;
 }
+
+/* Codex desktop parity pass: wider work surface */
+.message-list,
+.chat-composer {
+  width: min(900px, calc(100% - 76px));
+}
+
+.message-list {
+  padding-top: 46px;
+}
+
+.chat-message.is-user .message-body,
+.chat-message.is-user .message-content {
+  max-width: 620px;
+}
+
+.chat-composer {
+  padding-bottom: 24px;
+}
+
+.artifact-panel {
+  padding-right: 22px;
+  padding-left: 12px;
+}
