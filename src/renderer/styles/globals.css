@@ -2186,9 +2186,9 @@ body {
 }
 
 .conversation-title {
-  color: #33383d;
+  color: #3f454a;
   font-size: 14px;
-  font-weight: 640;
+  font-weight: 560;
   line-height: 1.25;
 }
 
@@ -2215,9 +2215,9 @@ body {
   top: 7px;
   right: 10px;
   width: 64px;
-  color: #8c949a;
+  color: #9aa1a6;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 460;
   text-align: right;
   white-space: nowrap;
 }
