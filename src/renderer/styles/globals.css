@@ -3838,6 +3838,7 @@ body {
   }
 
   .message-list {
+    width: min(820px, calc(100% - 72px));
     padding-bottom: 360px;
   }
 
@@ -3847,6 +3848,7 @@ body {
   }
 
   .tool-event[open] {
+    width: 100%;
     margin-bottom: 34px;
   }
 }
