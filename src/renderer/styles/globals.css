@@ -2623,13 +2623,55 @@ body {
   position: relative;
   z-index: 3;
   grid-column: 1;
+  display: flex;
+  align-items: center;
   min-height: 34px;
   margin-top: -35px;
   padding: 9px 18px 0;
-  padding-right: 126px;
+  padding-right: 148px;
+  gap: 15px;
+  color: #8d9499;
   background: transparent;
   border: 0;
   border-radius: 0;
+}
+
+.composer-status-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  line-height: 1;
+}
+
+.composer-status-row svg {
+  flex: 0 0 auto;
+}
+
+.composer-plus {
+  color: #777f85;
+}
+
+.composer-access {
+  color: #d95c37;
+  font-weight: 550;
+}
+
+.composer-access svg {
+  color: #f0753b;
+}
+
+.composer-goal {
+  color: #9aa1a6;
+}
+
+.composer-model {
+  margin-left: auto;
+  padding: 8px 12px;
+  color: #5f666b;
+  background: #f2f3f3;
+  border-radius: 10px;
+  font-weight: 550;
 }
 
 .tool-event-detail pre {

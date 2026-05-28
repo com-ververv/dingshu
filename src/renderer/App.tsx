@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  Crosshair,
   Edit3,
   ExternalLink,
   FileText,
@@ -19,6 +20,7 @@ import {
   Info,
   Laptop,
   LayoutPanelLeft,
+  Plus,
   MessageSquare,
   PanelRightClose,
   PanelRightOpen,
@@ -1747,9 +1749,11 @@ export default function App() {
             )}
           </div>
           <div className="composer-status-row" aria-hidden="true">
-            <span>Pexar</span>
+            <span className="composer-plus"><Plus size={18} /></span>
+            <span className="composer-access"><AlertCircle size={14} />Full access</span>
+            <span className="composer-goal"><Crosshair size={14} />Goal</span>
+            <span className="composer-model">Pexar</span>
             <span>5.5</span>
-            <span>codex/siliconflow-ai-sdk-demo</span>
           </div>
         </form>
 
