@@ -8,7 +8,6 @@ import {
   Bot,
   Box,
   CheckCircle2,
-  Circle,
   Clock,
   Copy,
   Crosshair,
@@ -488,9 +487,6 @@ function ArtifactPanel({
   artifacts,
   collapsed,
   gitDiffStats,
-  hasPendingApproval,
-  hasToolActivity,
-  isStreaming,
   onCopy,
   onLinkClick,
   onOpen,
@@ -499,9 +495,6 @@ function ArtifactPanel({
   artifacts: Artifact[];
   collapsed: boolean;
   gitDiffStats: GitDiffStats;
-  hasPendingApproval: boolean;
-  hasToolActivity: boolean;
-  isStreaming: boolean;
   onCopy: (content: string, label: string) => void;
   onLinkClick: (event: MouseEvent<HTMLElement>) => void;
   onOpen: (url: string) => void;
@@ -518,108 +511,46 @@ function ArtifactPanel({
   }
 
   const activeArtifact = artifacts[0];
-  const showProgress = isStreaming || hasPendingApproval || hasToolActivity;
-  const progressItems = [
-    {
-      active: isStreaming,
-      label: isStreaming ? '飞书任务正在执行' : '等待新的飞书任务',
-    },
-    {
-      active: hasPendingApproval,
-      label: hasPendingApproval ? '等待确认工具调用' : '无待确认工具调用',
-    },
-    {
-      active: artifacts.length > 0,
-      label: artifacts.length > 0 ? 'Artifact 已生成' : '暂无 Artifact',
-    },
-  ];
 
   return (
     <aside className="artifact-panel" aria-label="Document artifact preview">
       <section className="codex-side-card">
         <div className="codex-card-header">
-          <h2>{showProgress ? 'Progress' : 'Environment'}</h2>
+          <h2>Environment</h2>
           <button type="button" onClick={onToggle} title="收起预览">
             <Settings size={16} />
           </button>
         </div>
-        {showProgress ? (
-          <>
-            <div className="progress-list">
-              {progressItems.map((item) => (
-                <div className={`progress-item${item.active ? ' is-active' : ''}`} key={item.label}>
-                  <Circle size={14} />
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="side-card-divider" />
-            <div className="codex-card-section-title">Environment</div>
-            <div className="environment-list">
-              <div className="environment-item environment-changes">
-                <FileText size={14} />
-                <span>Changes</span>
-                <small className="change-addition">+{gitDiffStats.additions.toLocaleString()}</small>
-                <small className="change-deletion">-{gitDiffStats.deletions.toLocaleString()}</small>
-              </div>
-              <div className="environment-item">
-                <Laptop size={14} />
-                <span>Local</span>
-              </div>
-              <div className="environment-item">
-                <GitBranch size={14} />
-                <span>codex/siliconflow-ai-sdk-demo</span>
-              </div>
-              <div className="environment-item">
-                <ExternalLink size={14} />
-                <span>Push</span>
-              </div>
-              <div className="environment-item">
-                <Github size={14} />
-                <span>Create pull request</span>
-              </div>
-            </div>
-            <div className="side-card-divider" />
-            <div className="codex-card-section-title">Sources</div>
-            <div className="environment-item">
-              <Info size={14} />
-              <span>No sources yet</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="environment-list">
-              <div className="environment-item environment-changes">
-                <FileText size={14} />
-                <span>Changes</span>
-                <small className="change-addition">+{gitDiffStats.additions.toLocaleString()}</small>
-                <small className="change-deletion">-{gitDiffStats.deletions.toLocaleString()}</small>
-              </div>
-              <div className="environment-item">
-                <Laptop size={14} />
-                <span>Local</span>
-              </div>
-              <div className="environment-item">
-                <GitBranch size={14} />
-                <span>codex/siliconflow-ai-sdk-demo</span>
-              </div>
-              <div className="environment-item">
-                <ExternalLink size={14} />
-                <span>Push</span>
-              </div>
-              <div className="environment-item">
-                <Github size={14} />
-                <span>Create pull request</span>
-              </div>
-            </div>
-            <div className="side-card-divider" />
-            <div className="codex-card-section-title">Sources</div>
-            <div className="environment-item">
-              <Info size={14} />
-              <span>No sources yet</span>
-            </div>
-          </>
-        )}
+        <div className="environment-list">
+          <div className="environment-item environment-changes">
+            <FileText size={14} />
+            <span>Changes</span>
+            <small className="change-addition">+{gitDiffStats.additions.toLocaleString()}</small>
+            <small className="change-deletion">-{gitDiffStats.deletions.toLocaleString()}</small>
+          </div>
+          <div className="environment-item">
+            <Laptop size={14} />
+            <span>Local</span>
+          </div>
+          <div className="environment-item">
+            <GitBranch size={14} />
+            <span>codex/siliconflow-ai-sdk-demo</span>
+          </div>
+          <div className="environment-item">
+            <ExternalLink size={14} />
+            <span>Push</span>
+          </div>
+          <div className="environment-item">
+            <Github size={14} />
+            <span>Create pull request</span>
+          </div>
+        </div>
+        <div className="side-card-divider" />
+        <div className="codex-card-section-title">Sources</div>
+        <div className="environment-item">
+          <Info size={14} />
+          <span>No sources yet</span>
+        </div>
       </section>
 
       {!activeArtifact ? (
@@ -783,7 +714,6 @@ export default function App() {
   const hasPendingApproval = messages.some((message) =>
     message.toolEvents?.some((event) => event.status === 'pending_confirmation')
   );
-  const hasToolActivity = messages.some((message) => (message.toolEvents?.length ?? 0) > 0);
   const artifacts = useMemo(() => deriveArtifacts(messages), [messages]);
   const activeConversationTitle =
     conversations.find((conversation) => conversation.id === conversationId)?.title ?? 'New chat';
@@ -1778,9 +1708,6 @@ export default function App() {
           artifacts={artifacts}
           collapsed={artifactCollapsed}
           gitDiffStats={gitDiffStats}
-          hasPendingApproval={hasPendingApproval}
-          hasToolActivity={hasToolActivity}
-          isStreaming={isStreaming}
           onCopy={(content, label) => void copyText(content, label)}
           onLinkClick={openMarkdownLink}
           onOpen={openExternal}

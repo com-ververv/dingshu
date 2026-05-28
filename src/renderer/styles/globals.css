@@ -3668,3 +3668,128 @@ body {
 .tool-event[open] .tool-event-error {
   color: #8b9297;
 }
+
+/* Codex desktop parity pass: Environment card and composer final alignment */
+.artifact-panel {
+  padding-top: 82px;
+  padding-right: 22px;
+}
+
+.codex-side-card {
+  width: 318px;
+  gap: 16px;
+  padding: 20px 20px 22px;
+  border-color: #e8ecee;
+  border-radius: 24px;
+  box-shadow:
+    0 18px 36px rgb(0 0 0 / 0.055),
+    0 1px 2px rgb(0 0 0 / 0.035);
+}
+
+.codex-card-header {
+  min-height: 25px;
+}
+
+.codex-card-header h2 {
+  color: #8a9196;
+  font-size: 16px;
+  font-weight: 520;
+}
+
+.codex-card-header button {
+  color: #8f969b;
+}
+
+.environment-list {
+  gap: 12px;
+}
+
+.environment-item,
+.environment-item small {
+  min-height: 28px;
+  color: #252a2e;
+  font-size: 15px;
+  font-weight: 450;
+}
+
+.environment-item svg {
+  width: 18px;
+  height: 18px;
+  color: #4f565b;
+}
+
+.environment-changes {
+  grid-template-columns: 21px minmax(0, 1fr) auto auto;
+}
+
+.codex-card-section-title {
+  color: #8a9196;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.side-card-divider,
+.codex-card-divider {
+  margin: 6px 0 2px;
+}
+
+.chat-composer {
+  width: min(900px, calc(100% - 80px));
+  padding-bottom: 20px;
+}
+
+.composer-input-wrap,
+.chat-composer textarea {
+  min-height: 116px;
+}
+
+.composer-input-wrap {
+  border-color: #e4e8eb;
+  border-radius: 24px;
+  box-shadow:
+    0 13px 34px rgb(0 0 0 / 0.055),
+    0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.chat-composer textarea {
+  padding: 18px 116px 44px 20px;
+  border-radius: 24px;
+}
+
+.composer-actions {
+  right: 10px;
+  bottom: 35px;
+}
+
+.composer-status-row {
+  min-height: 36px;
+  margin-top: -38px;
+  padding: 7px 20px 0;
+  padding-right: 126px;
+}
+
+@media (max-width: 1500px) {
+  :root {
+    --codex-sidebar-width: 262px;
+    --codex-right-card-width: 292px;
+  }
+
+  .codex-side-card {
+    width: 276px;
+    padding: 18px 17px 20px;
+    border-radius: 22px;
+  }
+
+  .environment-list {
+    gap: 10px;
+  }
+
+  .environment-item,
+  .environment-item small {
+    font-size: 14px;
+  }
+
+  .chat-composer {
+    width: min(740px, calc(100% - 70px));
+  }
+}
