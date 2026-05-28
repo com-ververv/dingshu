@@ -465,6 +465,7 @@ function ArtifactPanel({
   collapsed,
   gitDiffStats,
   hasPendingApproval,
+  hasToolActivity,
   isStreaming,
   onCopy,
   onLinkClick,
@@ -475,6 +476,7 @@ function ArtifactPanel({
   collapsed: boolean;
   gitDiffStats: GitDiffStats;
   hasPendingApproval: boolean;
+  hasToolActivity: boolean;
   isStreaming: boolean;
   onCopy: (content: string, label: string) => void;
   onLinkClick: (event: MouseEvent<HTMLElement>) => void;
@@ -492,7 +494,7 @@ function ArtifactPanel({
   }
 
   const activeArtifact = artifacts[0];
-  const showProgress = isStreaming || hasPendingApproval;
+  const showProgress = isStreaming || hasPendingApproval || hasToolActivity;
 
   return (
     <aside className="artifact-panel" aria-label="Document artifact preview">
@@ -508,7 +510,7 @@ function ArtifactPanel({
             <div className="progress-list">
               <div className="progress-item is-active">
                 <span className="progress-dot" />
-                <span>{hasPendingApproval ? '等待确认工具调用' : '正在处理当前请求'}</span>
+                <span>{isStreaming ? '正在处理当前请求' : hasPendingApproval ? '等待确认工具调用' : '飞书调用已完成'}</span>
               </div>
               <div className="progress-item">
                 <span className="progress-dot" />
@@ -538,6 +540,12 @@ function ArtifactPanel({
                 <Folder size={14} />
                 <span>desktop-starter-app</span>
               </div>
+            </div>
+            <div className="side-card-divider" />
+            <div className="codex-card-section-title">Sources</div>
+            <div className="environment-item">
+              <Bot size={14} />
+              <span>SiliconFlow Kimi-K2.6</span>
             </div>
           </>
         ) : (
@@ -737,6 +745,7 @@ export default function App() {
   const hasPendingApproval = messages.some((message) =>
     message.toolEvents?.some((event) => event.status === 'pending_confirmation')
   );
+  const hasToolActivity = messages.some((message) => (message.toolEvents?.length ?? 0) > 0);
   const artifacts = useMemo(() => deriveArtifacts(messages), [messages]);
   const activeConversationTitle =
     conversations.find((conversation) => conversation.id === conversationId)?.title ?? 'New chat';
@@ -1727,6 +1736,7 @@ export default function App() {
           collapsed={artifactCollapsed}
           gitDiffStats={gitDiffStats}
           hasPendingApproval={hasPendingApproval}
+          hasToolActivity={hasToolActivity}
           isStreaming={isStreaming}
           onCopy={(content, label) => void copyText(content, label)}
           onLinkClick={openMarkdownLink}
