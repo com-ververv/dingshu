@@ -14,8 +14,11 @@ import {
   ExternalLink,
   FileText,
   Folder,
+  GitBranch,
+  Github,
+  Info,
+  Laptop,
   MessageSquare,
-  PanelRightClose,
   PanelRightOpen,
   PenLine,
   Plug,
@@ -453,9 +456,6 @@ function ToolEventList({
 function ArtifactPanel({
   artifacts,
   collapsed,
-  configItems,
-  hasPendingApproval,
-  isStreaming,
   onCopy,
   onLinkClick,
   onOpen,
@@ -463,9 +463,6 @@ function ArtifactPanel({
 }: {
   artifacts: Artifact[];
   collapsed: boolean;
-  configItems: ReturnType<typeof getConfigItems>;
-  hasPendingApproval: boolean;
-  isStreaming: boolean;
   onCopy: (content: string, label: string) => void;
   onLinkClick: (event: MouseEvent<HTMLElement>) => void;
   onOpen: (url: string) => void;
@@ -487,45 +484,40 @@ function ArtifactPanel({
     <aside className="artifact-panel" aria-label="Document artifact preview">
       <section className="codex-side-card">
         <div className="codex-card-header">
-          <h2>Progress</h2>
+          <h2>Environment</h2>
           <button type="button" onClick={onToggle} title="收起预览">
-            <PanelRightClose size={16} />
+            <Settings size={16} />
           </button>
         </div>
-        <div className="progress-list">
-          <div className={`progress-item ${isStreaming ? 'is-active' : 'is-done'}`}>
-            <span className="progress-dot" />
-            <span>{isStreaming ? '正在处理当前请求' : '等待新的飞书任务'}</span>
-          </div>
-          <div className={`progress-item ${hasPendingApproval ? 'is-active' : ''}`}>
-            <span className="progress-dot" />
-            <span>{hasPendingApproval ? '等待工具确认' : '无待确认工具调用'}</span>
-          </div>
-          <div className={`progress-item ${artifacts.length > 0 ? 'is-done' : ''}`}>
-            <span className="progress-dot" />
-            <span>{artifacts.length > 0 ? '已生成文档预览' : '暂无 Artifact'}</span>
-          </div>
-        </div>
-        <div className="side-card-divider" />
-        <div className="codex-card-section-title">Environment</div>
         <div className="environment-list">
-          {configItems.map((item) => (
-            <div key={item.label} className="environment-item">
-              {item.ok ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-              <span>{item.label}</span>
-              {item.detail ? <small>{item.detail}</small> : null}
-            </div>
-          ))}
+          <div className="environment-item environment-changes">
+            <FileText size={14} />
+            <span>Changes</span>
+            <small className="change-addition">+0</small>
+            <small className="change-deletion">-0</small>
+          </div>
           <div className="environment-item">
-            <Folder size={14} />
-            <span>desktop-starter-app</span>
+            <Laptop size={14} />
+            <span>Local</span>
+          </div>
+          <div className="environment-item">
+            <GitBranch size={14} />
+            <span>codex/siliconflow-ai-sdk-demo</span>
+          </div>
+          <div className="environment-item">
+            <ExternalLink size={14} />
+            <span>Push</span>
+          </div>
+          <div className="environment-item">
+            <Github size={14} />
+            <span>Create pull request</span>
           </div>
         </div>
         <div className="side-card-divider" />
         <div className="codex-card-section-title">Sources</div>
         <div className="environment-item">
-          <Bot size={14} />
-          <span>SiliconFlow Kimi-K2.6</span>
+          <Info size={14} />
+          <span>No sources yet</span>
         </div>
       </section>
 
@@ -1648,9 +1640,6 @@ export default function App() {
         <ArtifactPanel
           artifacts={artifacts}
           collapsed={artifactCollapsed}
-          configItems={configItems}
-          hasPendingApproval={hasPendingApproval}
-          isStreaming={isStreaming}
           onCopy={(content, label) => void copyText(content, label)}
           onLinkClick={openMarkdownLink}
           onOpen={openExternal}
