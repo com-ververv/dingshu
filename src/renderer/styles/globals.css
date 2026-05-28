@@ -3566,3 +3566,49 @@ body {
 .conversation-item.is-active .conversation-preview {
   display: none;
 }
+
+/* Codex desktop parity pass: header ready control */
+.header-right {
+  gap: 10px;
+}
+
+.chat-status {
+  display: inline-flex;
+  min-width: 54px;
+  min-height: 28px;
+  padding: 0 13px;
+  color: #7f878d;
+  background: #ffffff;
+  border: 1px solid #e7ebed;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.035);
+  font-size: 13px;
+  font-weight: 560;
+}
+
+.chat-status.is-active {
+  display: inline-flex;
+  color: #3d8b6f;
+  background: #eef9f4;
+  border-color: #d6efe2;
+}
+
+.header-tool-group {
+  display: none;
+}
+
+.settings-button {
+  width: 34px;
+  min-height: 34px;
+  color: #5d646a;
+  background: #ffffff;
+  border-color: #e4e8ea;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.settings-button svg {
+  width: 19px;
+  height: 19px;
+  stroke-width: 2;
+}
