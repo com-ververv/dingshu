@@ -2967,6 +2967,17 @@ body {
   min-height: 34px;
 }
 
+.composer-actions .primary-button {
+  color: #ffffff;
+  background: #17191b;
+  border-color: #17191b;
+}
+
+.composer-actions .primary-button:hover {
+  background: #000000;
+  border-color: #000000;
+}
+
 .composer-status-row {
   min-height: 32px;
   margin-top: -33px;
