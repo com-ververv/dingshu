@@ -2737,6 +2737,11 @@ body {
   line-height: 1;
 }
 
+.header-tool-button:first-child svg {
+  color: #3f7ee8;
+  stroke-width: 2.1;
+}
+
 .header-tool-button svg,
 .settings-button svg {
   width: 15px;
