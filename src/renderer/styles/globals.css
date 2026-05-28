@@ -3119,3 +3119,24 @@ body {
 .artifact-panel {
   padding-top: 78px;
 }
+
+/* Codex desktop parity pass: sidebar navigation density */
+.sidebar-window-spacer {
+  height: 45px;
+}
+
+.sidebar-primary-nav {
+  padding-top: 6px;
+  padding-bottom: 20px;
+}
+
+.sidebar-primary-nav button,
+.sidebar-settings-entry {
+  min-height: 28px;
+  border-radius: 7px;
+}
+
+.sidebar-primary-nav button:hover,
+.sidebar-settings-entry:hover {
+  background: #e9eeee;
+}
