@@ -3091,3 +3091,31 @@ body {
 .codex-side-card {
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.04);
 }
+
+/* Codex desktop parity pass: center work surface rhythm */
+.message-list,
+.chat-composer {
+  width: min(700px, calc(100% - 168px));
+}
+
+.message-list {
+  padding-top: 50px;
+  padding-bottom: 156px;
+}
+
+.chat-composer {
+  padding-bottom: 38px;
+}
+
+.conversation-list {
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+.conversation-item {
+  min-height: 34px;
+}
+
+.artifact-panel {
+  padding-top: 78px;
+}
