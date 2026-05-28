@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { createApprovalId, waitForApproval } from '../approval';
 import { previewJson, type ChatToolEventSink } from '../events';
 import { classifyLarkCliError, getLarkCliBin, runLarkCli } from '../../lark/cli';
-import { getLarkCapability, listLarkCapabilities } from '../../lark/capabilities';
+import { getLarkCapability, listLarkCapabilities, type LarkCapability } from '../../lark/capabilities';
 
 const TOOL_NAME = 'lark_cli_shortcut';
 const MAX_OUTPUT_PREVIEW_LENGTH = 6_000;
@@ -42,6 +42,11 @@ export function buildLarkShortcutFlagArgs(
 
 function hasShortcutArgs(args: ShortcutArgs): boolean {
   return Object.keys(args).length > 0;
+}
+
+function hasFlagValue(args: ShortcutArgs, flag: string): boolean {
+  const value = args[flag] ?? args[`--${flag}`];
+  return value !== undefined && value !== null && value !== false && String(value).trim() !== '';
 }
 
 function coerceShortcutArgs(value: unknown): ShortcutArgs | undefined {
@@ -214,6 +219,46 @@ export function normalizeLarkShortcutArgs(
   return { args, recoveredFromReason: false };
 }
 
+function validateOpenOrChatIdList(flag: string, value: string | number | boolean): string | undefined {
+  const invalid = String(value)
+    .split(',')
+    .map((item) => item.trim())
+    .find((item) => item && !/^(ou|oc)_[A-Za-z0-9]+$/.test(item));
+  if (!invalid) {
+    return undefined;
+  }
+  return `参数 --${flag} 的 ID 格式不正确：${invalid}。应使用 ou_ 开头的用户 open_id，或 oc_ 开头的群 ID。`;
+}
+
+export function validateLarkShortcutArgs(capability: LarkCapability, args: ShortcutArgs): string | undefined {
+  for (const flag of capability.requiredFlags ?? []) {
+    if (!hasFlagValue(args, flag)) {
+      return `调用 ${capability.id} 缺少必填参数 --${flag}。`;
+    }
+  }
+
+  for (const group of capability.requiredOneOf ?? []) {
+    if (!group.some((flag) => hasFlagValue(args, flag))) {
+      return `调用 ${capability.id} 至少需要提供一个参数：${group.map((flag) => `--${flag}`).join('、')}。`;
+    }
+  }
+
+  for (const [flag, validator] of Object.entries(capability.flagValidators ?? {})) {
+    const value = args[flag] ?? args[`--${flag}`];
+    if (value === undefined || value === null || value === false || String(value).trim() === '') {
+      continue;
+    }
+    if (validator === 'openOrChatIdList') {
+      const message = validateOpenOrChatIdList(flag, value);
+      if (message) {
+        return message;
+      }
+    }
+  }
+
+  return undefined;
+}
+
 function parseOutput(stdout: string): unknown {
   const text = stdout.trim();
   if (!text) {
@@ -270,6 +315,27 @@ export function createLarkCliShortcutTool(requestId: string, emitToolEvent: Chat
 
       let shortcutArgs: string[];
       const normalized = normalizeLarkShortcutArgs(args, capabilityId, reason);
+      const validationError = validateLarkShortcutArgs(capability, normalized.args);
+      if (validationError) {
+        const output = {
+          ok: false,
+          capability: capability.id,
+          error: validationError,
+          args: normalized.args,
+        };
+        emitToolEvent({
+          requestId,
+          type: 'tool-call-result',
+          toolCallId: options.toolCallId,
+          toolName: TOOL_NAME,
+          status: 'failed',
+          outputPreview: previewJson(output),
+          errorMessage: validationError,
+          elapsedMs: Date.now() - startedAt,
+        });
+        return output;
+      }
+
       try {
         shortcutArgs = buildLarkShortcutFlagArgs(normalized.args, capability.allowedFlags);
       } catch (error) {

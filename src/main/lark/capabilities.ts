@@ -4,13 +4,18 @@ export type LarkCapability = {
   allowedFlags: readonly string[];
   description: string;
   domain: string;
+  flagValidators?: Readonly<Record<string, LarkCapabilityFlagValidator>>;
   id: string;
   identity: 'user' | 'bot' | 'auto';
+  requiredFlags?: readonly string[];
+  requiredOneOf?: readonly (readonly string[])[];
   risk: LarkCapabilityRisk;
   shortcut: string;
   supportsFormat?: boolean;
   timeoutMs: number;
 };
+
+export type LarkCapabilityFlagValidator = 'openOrChatIdList';
 
 const READ_TIMEOUT_MS = 45_000;
 const WRITE_TIMEOUT_MS = 60_000;
@@ -24,6 +29,7 @@ export const LARK_CAPABILITIES = [
     risk: 'read',
     timeoutMs: READ_TIMEOUT_MS,
     description: '搜索飞书联系人，支持姓名、邮箱或 open_id 查询。',
+    requiredOneOf: [['query', 'queries', 'user-ids', 'has-chatted', 'has-enterprise-email', 'exclude-external-users', 'left-organization']],
     allowedFlags: [
       'query',
       'queries',
@@ -74,6 +80,7 @@ export const LARK_CAPABILITIES = [
     risk: 'read',
     timeoutMs: READ_TIMEOUT_MS,
     description: '根据参会人和时间范围推荐可用会议时间。',
+    flagValidators: { 'attendee-ids': 'openOrChatIdList' },
     allowedFlags: ['attendee-ids', 'duration-minutes', 'start', 'end', 'timezone', 'exclude', 'event-rrule'],
   },
   {
@@ -94,6 +101,7 @@ export const LARK_CAPABILITIES = [
     risk: 'read',
     timeoutMs: READ_TIMEOUT_MS,
     description: '读取指定群聊或单聊的消息列表。',
+    requiredOneOf: [['chat-id', 'user-id']],
     allowedFlags: ['chat-id', 'user-id', 'start', 'end', 'page-size', 'page-token', 'sort'],
   },
   {
@@ -259,6 +267,7 @@ export const LARK_CAPABILITIES = [
     risk: 'read',
     timeoutMs: READ_TIMEOUT_MS,
     description: '搜索飞书视频会议记录。',
+    requiredOneOf: [['query', 'start', 'end', 'organizer-ids', 'participant-ids', 'room-ids']],
     allowedFlags: ['query', 'organizer-ids', 'participant-ids', 'room-ids', 'start', 'end', 'page-size', 'page-token'],
   },
   {
@@ -319,6 +328,7 @@ export const LARK_CAPABILITIES = [
     risk: 'read',
     timeoutMs: READ_TIMEOUT_MS,
     description: '列出指定用户的 OKR 周期。',
+    requiredFlags: ['user-id'],
     allowedFlags: ['user-id', 'user-id-type', 'time-range'],
   },
   {
@@ -372,6 +382,7 @@ export const LARK_CAPABILITIES = [
     timeoutMs: WRITE_TIMEOUT_MS,
     description: '回复飞书日程邀请。',
     allowedFlags: ['calendar-id', 'event-id', 'rsvp-status', 'dry-run'],
+    supportsFormat: false,
   },
   {
     id: 'task_create',
@@ -532,6 +543,7 @@ export const LARK_CAPABILITIES = [
       'event-location',
       'dry-run',
     ],
+    supportsFormat: false,
   },
   {
     id: 'mail_forward',
@@ -561,6 +573,7 @@ export const LARK_CAPABILITIES = [
       'event-location',
       'dry-run',
     ],
+    supportsFormat: false,
   },
   {
     id: 'drive_upload',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLarkShortcutFlagArgs, normalizeLarkShortcutArgs } from './larkCliShortcut';
+import { buildLarkShortcutFlagArgs, normalizeLarkShortcutArgs, validateLarkShortcutArgs } from './larkCliShortcut';
 import { getLarkCapability } from '../../lark/capabilities';
 
 describe('lark_cli_shortcut', () => {
@@ -108,6 +108,33 @@ describe('lark_cli_shortcut', () => {
   it('marks sheets shortcuts as formatless because lark-cli does not expose --format there', () => {
     expect(getLarkCapability('sheets_info')?.supportsFormat).toBe(false);
     expect(getLarkCapability('calendar_agenda')?.supportsFormat).not.toBe(false);
+  });
+
+  it('marks shortcuts that do not expose --format as formatless', () => {
+    expect(getLarkCapability('calendar_rsvp')?.supportsFormat).toBe(false);
+    expect(getLarkCapability('mail_reply')?.supportsFormat).toBe(false);
+    expect(getLarkCapability('mail_forward')?.supportsFormat).toBe(false);
+  });
+
+  it('validates required filters before invoking lark-cli', () => {
+    const vcSearch = getLarkCapability('vc_search');
+    const okrCycleList = getLarkCapability('okr_cycle_list');
+
+    expect(validateLarkShortcutArgs(vcSearch!, {})).toBe(
+      '调用 vc_search 至少需要提供一个参数：--query、--start、--end、--organizer-ids、--participant-ids、--room-ids。'
+    );
+    expect(validateLarkShortcutArgs(vcSearch!, { query: '周会' })).toBeUndefined();
+    expect(validateLarkShortcutArgs(okrCycleList!, {})).toBe('调用 okr_cycle_list 缺少必填参数 --user-id。');
+    expect(validateLarkShortcutArgs(okrCycleList!, { 'user-id': 'ou_xxx' })).toBeUndefined();
+  });
+
+  it('validates calendar suggestion attendee id prefixes', () => {
+    const calendarSuggestion = getLarkCapability('calendar_suggestion');
+
+    expect(validateLarkShortcutArgs(calendarSuggestion!, { 'attendee-ids': 'g8af7fg8' })).toBe(
+      '参数 --attendee-ids 的 ID 格式不正确：g8af7fg8。应使用 ou_ 开头的用户 open_id，或 oc_ 开头的群 ID。'
+    );
+    expect(validateLarkShortcutArgs(calendarSuggestion!, { 'attendee-ids': 'ou_xxx,oc_xxx' })).toBeUndefined();
   });
 
   it('keeps write capabilities behind explicit allowlists', () => {
