@@ -3453,6 +3453,10 @@ body {
   min-height: 24px;
 }
 
+.codex-card-header.is-section {
+  min-height: 20px;
+}
+
 .codex-card-header h2,
 .codex-card-section-title {
   color: #858b90;

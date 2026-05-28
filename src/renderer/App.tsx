@@ -488,6 +488,8 @@ function ArtifactPanel({
   artifacts,
   collapsed,
   gitDiffStats,
+  hasPendingApproval,
+  isStreaming,
   onCopy,
   onLinkClick,
   onOpen,
@@ -496,6 +498,8 @@ function ArtifactPanel({
   artifacts: Artifact[];
   collapsed: boolean;
   gitDiffStats: GitDiffStats;
+  hasPendingApproval: boolean;
+  isStreaming: boolean;
   onCopy: (content: string, label: string) => void;
   onLinkClick: (event: MouseEvent<HTMLElement>) => void;
   onOpen: (url: string) => void;
@@ -513,15 +517,44 @@ function ArtifactPanel({
 
   const activeArtifact = artifacts[0];
   const hasGitChanges = gitDiffStats.additions > 0 || gitDiffStats.deletions > 0;
+  const hasPendingArtifact = artifacts.some((artifact) => artifact.status === 'creating' || artifact.status === 'draft');
+  const showProgress = isStreaming || hasPendingApproval || hasPendingArtifact;
 
   return (
     <aside className="artifact-panel" aria-label="Document artifact preview">
       <section className="codex-side-card">
+        {showProgress ? (
+          <>
+            <div className="codex-card-header">
+              <h2>Progress</h2>
+              <button type="button" onClick={onToggle} title="收起预览">
+                <PanelRightClose size={16} />
+              </button>
+            </div>
+            <div className="progress-list">
+              <div className={`progress-item ${isStreaming ? 'is-active' : 'is-done'}`}>
+                {isStreaming ? <Clock size={14} /> : <CheckCircle2 size={14} />}
+                <span>{isStreaming ? '正在处理当前请求' : '当前请求已完成'}</span>
+              </div>
+              <div className={`progress-item ${hasPendingApproval ? 'is-active' : 'is-done'}`}>
+                {hasPendingApproval ? <Clock size={14} /> : <CheckCircle2 size={14} />}
+                <span>{hasPendingApproval ? '等待确认工具调用' : '无待确认工具调用'}</span>
+              </div>
+              <div className={`progress-item ${hasPendingArtifact ? 'is-active' : 'is-done'}`}>
+                {hasPendingArtifact ? <Clock size={14} /> : <CheckCircle2 size={14} />}
+                <span>{hasPendingArtifact ? '正在准备 Artifact' : '暂无 Artifact'}</span>
+              </div>
+            </div>
+            <div className="side-card-divider" />
+          </>
+        ) : null}
         <div className="codex-card-header">
           <h2>Environment</h2>
-          <button type="button" onClick={onToggle} title="收起预览">
-            <Settings size={16} />
-          </button>
+          {!showProgress ? (
+            <button type="button" onClick={onToggle} title="收起预览">
+              <Settings size={16} />
+            </button>
+          ) : null}
         </div>
         <div className="environment-list">
           <div className="environment-item environment-changes">
@@ -1710,6 +1743,8 @@ export default function App() {
           artifacts={artifacts}
           collapsed={artifactCollapsed}
           gitDiffStats={gitDiffStats}
+          hasPendingApproval={hasPendingApproval}
+          isStreaming={isStreaming}
           onCopy={(content, label) => void copyText(content, label)}
           onLinkClick={openMarkdownLink}
           onOpen={openExternal}
