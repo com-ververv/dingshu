@@ -5,20 +5,22 @@
 .settings-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgb(37 33 28 / 0.38);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
+  backdrop-filter: blur(8px);
 }
 
 .settings-panel {
   width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
+  max-width: 560px;
+  max-height: min(720px, 90vh);
   overflow-y: auto;
-  background-color: var(--color-bg);
-  border-radius: var(--radius-xl);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
   box-shadow: var(--shadow-lg);
 }
 
@@ -26,19 +28,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-lg);
+  padding: 14px 16px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .settings-header h2 {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
+  font-weight: 650;
 }
 
 .close-button {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   background: transparent;
   border: none;
   color: var(--color-text-secondary);
@@ -53,20 +56,23 @@
 .settings-tabs {
   display: flex;
   border-bottom: 1px solid var(--color-border);
-  padding: 0 var(--space-lg);
+  padding: 0 10px;
+  gap: 4px;
 }
 
 .settings-tab {
-  padding: var(--space-md) var(--space-lg);
+  padding: 11px 12px;
   background: transparent;
   border: none;
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: 550;
   color: var(--color-text-secondary);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .settings-tab:hover {
@@ -79,11 +85,11 @@
 }
 
 .settings-content {
-  padding: var(--space-lg);
+  padding: 16px;
 }
 
 .settings-section {
-  margin-bottom: var(--space-xl);
+  margin-bottom: 22px;
 }
 
 .settings-section:last-child {
@@ -91,14 +97,15 @@
 }
 
 .settings-section h3 {
-  font-size: var(--text-lg);
-  margin-bottom: var(--space-sm);
+  font-size: var(--text-base);
+  margin-bottom: 6px;
+  font-weight: 650;
 }
 
 .section-description {
   color: var(--color-text-secondary);
   font-size: var(--text-sm);
-  margin-bottom: var(--space-lg);
+  margin-bottom: 14px;
 }
 
 .about-section {
@@ -107,20 +114,23 @@
 }
 
 .test-result {
-  padding: var(--space-md);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-md);
+  padding: 10px 11px;
+  border-radius: 8px;
+  margin: 12px 0 0;
   font-size: var(--text-sm);
+  border: 1px solid transparent;
 }
 
 .test-result.success {
-  background-color: #dcfce7;
-  color: #16a34a;
+  background-color: rgb(22 138 74 / 0.1);
+  color: var(--color-success);
+  border-color: rgb(22 138 74 / 0.2);
 }
 
 .test-result.error {
-  background-color: #fee2e2;
-  color: #dc2626;
+  background-color: rgb(220 38 38 / 0.1);
+  color: var(--color-error);
+  border-color: rgb(220 38 38 / 0.2);
 }
 
 .about-text {
@@ -156,7 +166,7 @@
 .database-info {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: 14px;
 }
 
 .db-path-display {
@@ -173,9 +183,10 @@
 
 .db-path {
   display: block;
-  padding: var(--space-sm) var(--space-md);
+  padding: 9px 10px;
   background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
   font-size: var(--text-xs);
   word-break: break-all;
   color: var(--color-text);
@@ -189,20 +200,23 @@
 .db-status {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  border-radius: var(--radius-md);
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
   font-size: var(--text-sm);
+  border: 1px solid transparent;
 }
 
 .db-status.warning {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: rgb(254 243 199 / 0.72);
+  color: #8a4b08;
+  border-color: rgb(245 158 11 / 0.22);
 }
 
 .db-status.success {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: rgb(22 138 74 / 0.1);
+  color: var(--color-success);
+  border-color: rgb(22 138 74 / 0.2);
 }
 
 .db-status .status-icon {
@@ -210,9 +224,10 @@
 }
 
 .migration-section {
-  padding: var(--space-md);
+  padding: 12px;
   background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
 }
 
 .migration-section h4 {
@@ -234,7 +249,7 @@
 
 .credential-grid {
   display: grid;
-  gap: var(--space-sm);
+  gap: 9px;
 }
 
 .credential-row {
@@ -242,7 +257,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  padding: var(--space-sm) 0;
+  padding: 7px 0;
   font-size: var(--text-sm);
 }
 
@@ -260,11 +275,12 @@
 
 .auth-section {
   display: grid;
-  gap: var(--space-md);
-  margin-top: var(--space-lg);
-  padding: var(--space-md);
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px;
   background-color: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
 }
 
 .auth-result {
@@ -280,16 +296,16 @@
 .capability-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-sm);
+  gap: 8px;
 }
 
 .capability-summary div {
   display: grid;
   gap: 2px;
-  padding: var(--space-sm);
+  padding: 9px;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
 }
 
 .capability-summary strong {
@@ -309,12 +325,12 @@
 .cli-info code,
 .auth-result code {
   display: block;
-  padding: var(--space-sm);
+  padding: 9px;
   overflow-wrap: anywhere;
   font-size: var(--text-xs);
   background: var(--color-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 7px;
 }
 
 /* Secondary button style */
