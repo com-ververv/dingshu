@@ -495,3 +495,75 @@
   background: #000000;
   border-color: #000000;
 }
+
+/* Codex desktop parity pass: settings content scale */
+.settings-body {
+  grid-template-columns: 292px minmax(0, 1fr);
+}
+
+.settings-tabs {
+  padding: 66px 14px 24px;
+}
+
+.settings-back-button {
+  margin-bottom: 26px;
+  color: #7f878c;
+  font-size: 13px;
+}
+
+.settings-nav-title {
+  margin-bottom: 15px;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.settings-tab {
+  min-height: 32px;
+  font-size: 13.5px;
+}
+
+.settings-content {
+  padding: 78px 0 72px 88px;
+}
+
+.settings-section {
+  max-width: 680px;
+}
+
+.settings-section h3 {
+  margin-bottom: 30px;
+  font-size: 28px;
+  font-weight: 650;
+}
+
+.section-description {
+  margin-bottom: 16px;
+  font-size: 13.5px;
+}
+
+.credential-row {
+  min-height: 54px;
+  padding: 14px 16px;
+  border-radius: 11px;
+}
+
+.settings-section > input,
+.credential-grid > input,
+.db-status,
+.migration-section,
+.auth-section {
+  max-width: 680px;
+}
+
+.settings-section > input,
+.credential-grid > input {
+  min-height: 44px;
+  border-radius: 11px;
+}
+
+.settings-action {
+  min-height: 38px;
+  padding: 0 13px;
+  border-radius: 10px;
+  font-size: 13px;
+}
