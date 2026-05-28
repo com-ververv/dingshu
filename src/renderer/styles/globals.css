@@ -2309,6 +2309,120 @@ body {
   font-size: 12px;
 }
 
+.tool-event-list {
+  gap: 7px;
+  margin: 0 0 12px;
+}
+
+.tool-event-summary {
+  gap: 6px;
+  color: #8b9297;
+}
+
+.tool-event-summary span {
+  padding: 0;
+  color: #8b9297;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+}
+
+.tool-event {
+  overflow: hidden;
+  background: #fbfbfb;
+  border-color: #e8ecee;
+  border-radius: 12px;
+}
+
+.tool-event summary {
+  min-height: 31px;
+  padding: 6px 9px;
+  color: #626a70;
+  font-size: 13px;
+}
+
+.tool-event-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.tool-event-status,
+.tool-event-elapsed {
+  font-size: 11px;
+}
+
+.tool-event-detail {
+  gap: 5px;
+  padding: 0 9px 9px;
+}
+
+.tool-event-detail p {
+  color: #858c91;
+  font-size: 11px;
+}
+
+.tool-event-detail pre {
+  max-height: 92px;
+  padding: 7px 8px;
+  color: #51575d;
+  background: #ffffff;
+  border-color: #edf0f1;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.42;
+}
+
+.tool-event-error {
+  color: #c4483f;
+}
+
+.chat-composer {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(760px, calc(100% - 92px));
+  gap: 0;
+  padding-bottom: 20px;
+}
+
+.composer-input-wrap {
+  z-index: 1;
+}
+
+.chat-composer textarea {
+  min-height: 82px;
+  padding: 16px 118px 30px 16px;
+  resize: none;
+  border-radius: 18px;
+}
+
+.composer-actions {
+  position: absolute;
+  right: 10px;
+  bottom: 42px;
+  z-index: 2;
+  padding: 0;
+}
+
+.composer-actions .secondary-button {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  border-radius: 10px;
+}
+
+.composer-actions .primary-button,
+.composer-actions .stop-button {
+  min-height: 32px;
+  min-width: 58px;
+  border-radius: 10px;
+}
+
+.composer-status-row {
+  grid-column: 1;
+  min-height: 30px;
+  margin-top: -20px;
+  padding: 9px 18px 0;
+}
+
 @media (max-width: 980px) {
   .app-header {
     left: 0;
