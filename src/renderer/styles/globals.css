@@ -3005,3 +3005,31 @@ body {
 .composer-model {
   padding: 7px 11px;
 }
+
+/* Codex desktop parity pass: late viewport calibration */
+.message-list,
+.chat-composer {
+  width: min(740px, calc(100% - 118px));
+}
+
+.message-list {
+  padding-bottom: 142px;
+}
+
+.chat-composer {
+  padding-bottom: 28px;
+}
+
+.composer-input-wrap {
+  min-height: 88px;
+  border-color: #e9ecee;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.055);
+}
+
+.chat-composer textarea {
+  min-height: 88px;
+}
+
+.codex-side-card {
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.05);
+}
