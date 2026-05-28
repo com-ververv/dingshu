@@ -3824,16 +3824,16 @@ body {
 
   .composer-input-wrap,
   .chat-composer textarea {
-    min-height: 104px;
+    min-height: 96px;
   }
 
   .chat-composer textarea {
-    padding-top: 17px;
-    padding-bottom: 40px;
+    padding-top: 16px;
+    padding-bottom: 36px;
   }
 
   .composer-status-row {
-    margin-top: -35px;
+    margin-top: -33px;
     padding-right: 116px;
   }
 
