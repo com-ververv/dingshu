@@ -3081,3 +3081,8 @@ body {
   border-radius: 999px;
   font-size: 0;
 }
+
+/* Codex desktop parity pass: right card vertical offset */
+.artifact-panel {
+  padding-top: 92px;
+}
