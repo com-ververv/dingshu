@@ -3799,8 +3799,8 @@ body {
   border-color: #e4e8eb;
   border-radius: 24px;
   box-shadow:
-    0 13px 34px rgb(0 0 0 / 0.055),
-    0 1px 2px rgb(0 0 0 / 0.04);
+    0 11px 30px rgb(0 0 0 / 0.05),
+    0 1px 2px rgb(0 0 0 / 0.035);
 }
 
 .chat-composer textarea {
@@ -3809,8 +3809,8 @@ body {
 }
 
 .composer-actions {
-  right: 10px;
-  bottom: 35px;
+  right: 9px;
+  bottom: 34px;
 }
 
 .composer-status-row {
@@ -3857,8 +3857,10 @@ body {
   }
 
   .composer-status-row {
-    margin-top: -33px;
-    padding-right: 116px;
+    min-height: 32px;
+    margin-top: -32px;
+    padding-top: 5px;
+    padding-right: 112px;
   }
 
   .message-list {
