@@ -2703,12 +2703,15 @@ body {
 
 .app-title {
   font-size: 15px;
+  font-weight: 610;
 }
 
 .header-more-button {
   width: 26px;
   min-height: 24px;
+  color: #858b90;
   font-size: 16px;
+  font-weight: 520;
 }
 
 .header-tool-button,
