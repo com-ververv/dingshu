@@ -3064,3 +3064,20 @@ body {
   padding-left: 17px;
   padding-right: 124px;
 }
+
+/* Codex desktop parity pass: active chat status dot */
+.conversation-item.is-active > button:first-child {
+  padding-right: 34px;
+}
+
+.conversation-item.is-active .conversation-time {
+  top: 9px;
+  right: 11px;
+  width: 12px;
+  height: 12px;
+  overflow: hidden;
+  color: transparent;
+  border: 2px solid #98a0a6;
+  border-radius: 999px;
+  font-size: 0;
+}
