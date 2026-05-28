@@ -27,6 +27,13 @@ const ok = <T>(data: T): IPCResponse<T> => ({ success: true, data });
 function createE2EChatAPI(): ChatAPI {
   let conversationCounter = 0;
   const conversations = new Map<string, ChatConversationDetail>();
+  let pendingApproval:
+    | {
+        conversationId: string;
+        requestId: string;
+        toolCallId: string;
+      }
+    | undefined;
   const listeners: ListenerMap = {
     delta: new Set(),
     done: new Set(),
@@ -75,6 +82,7 @@ function createE2EChatAPI(): ChatAPI {
       const now = Date.now();
       const conversationId = request.conversationId ?? `e2e-conversation-${++conversationCounter}`;
       const assistantMessageId = request.assistantMessageId ?? `e2e-assistant-${conversationCounter}`;
+      const isApprovalFlow = userContent.includes('审批拒绝');
       const response = `E2E mock response for: ${userContent}`;
 
       conversations.set(conversationId, {
@@ -107,6 +115,30 @@ function createE2EChatAPI(): ChatAPI {
       });
 
       window.setTimeout(() => {
+        if (isApprovalFlow) {
+          const toolCallId = `e2e-tool-${conversationCounter}`;
+          const approvalId = `e2e-approval-${conversationCounter}`;
+          pendingApproval = {
+            conversationId,
+            requestId: request.requestId,
+            toolCallId,
+          };
+          listeners.toolCallConfirmationRequired.forEach((listener) =>
+            listener({
+              action: '创建飞书云文档',
+              approvalId,
+              conversationId,
+              inputPreview: '{"title":"E2E审批拒绝","contentPreview":"E2E"}',
+              requestId: request.requestId,
+              riskSummary: '这会使用你的飞书账号创建一篇新的云文档。',
+              targetPreview: 'E2E审批拒绝',
+              toolCallId,
+              toolName: 'lark_doc_create',
+              type: 'tool-call-confirmation-required',
+            })
+          );
+          return;
+        }
         listeners.delta.forEach((listener) =>
           listener({
             conversationId,
@@ -131,7 +163,47 @@ function createE2EChatAPI(): ChatAPI {
     },
     stop: async () => ok(undefined),
     approveToolCall: async () => ok(undefined),
-    rejectToolCall: async () => ok(undefined),
+    rejectToolCall: async () => {
+      const approval = pendingApproval;
+      pendingApproval = undefined;
+      if (!approval) {
+        return { success: false, error: { code: 'E2E_APPROVAL_NOT_FOUND', message: 'Mock approval not found' } };
+      }
+      window.setTimeout(() => {
+        listeners.toolCallResult.forEach((listener) =>
+          listener({
+            conversationId: approval.conversationId,
+            elapsedMs: 25,
+            outputPreview: '{"ok":false,"denied":true}',
+            requestId: approval.requestId,
+            status: 'cancelled',
+            toolCallId: approval.toolCallId,
+            toolName: 'lark_doc_create',
+            type: 'tool-call-result',
+          })
+        );
+        window.setTimeout(() => {
+          const finalText = '创建操作已被取消，文档未生成。';
+          listeners.delta.forEach((listener) =>
+            listener({
+              conversationId: approval.conversationId,
+              requestId: approval.requestId,
+              textDelta: finalText,
+              type: 'delta',
+            })
+          );
+          listeners.done.forEach((listener) =>
+            listener({
+              conversationId: approval.conversationId,
+              finishReason: 'mock',
+              requestId: approval.requestId,
+              type: 'done',
+            })
+          );
+        }, 10);
+      }, 10);
+      return ok(undefined);
+    },
     onDelta: (callback) => {
       listeners.delta.add(callback);
     },

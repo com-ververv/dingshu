@@ -61,6 +61,28 @@ async function run() {
       timeout: 5_000,
     });
 
+    await page.getByTestId('new-conversation-button').click();
+    await page.getByTestId('chat-input').fill('审批拒绝：请创建一个飞书文档');
+    await page.getByTestId('send-message-button').click();
+    await page.getByTestId('chat-status').getByText('等待确认', { exact: true }).waitFor({
+      state: 'visible',
+      timeout: 5_000,
+    });
+    await page.getByTestId('chat-message-assistant').last().getByRole('button', { name: '拒绝' }).click();
+    await page.getByText('创建操作已被取消，文档未生成。', { exact: true }).waitFor({
+      state: 'visible',
+      timeout: 5_000,
+    });
+    await page.getByTestId('chat-status').getByText('已完成：mock', { exact: true }).waitFor({
+      state: 'visible',
+      timeout: 5_000,
+    });
+    const latestAssistant = page.getByTestId('chat-message-assistant').last();
+    await latestAssistant.locator('.message-state').getByText('已完成', { exact: true }).waitFor({
+      state: 'visible',
+      timeout: 5_000,
+    });
+
     console.log('E2E browser smoke passed');
   } finally {
     await browser?.close();

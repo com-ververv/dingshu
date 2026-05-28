@@ -773,10 +773,11 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
+      const messageId = streamingMessageIdRef.current;
       setStatusText('正在生成');
       setMessages((current) =>
         current.map((message) =>
-          message.id === streamingMessageIdRef.current
+          message.id === messageId
             ? {
                 ...message,
                 content: message.content + event.textDelta,
@@ -791,9 +792,10 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
+      const messageId = streamingMessageIdRef.current;
       setMessages((current) =>
         current.map((message) =>
-          message.id === streamingMessageIdRef.current
+          message.id === messageId
             ? {
                 ...message,
                 status: message.status === 'cancelled' ? 'cancelled' : 'completed',
@@ -811,9 +813,10 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
+      const messageId = streamingMessageIdRef.current;
       setMessages((current) =>
         current.map((message) =>
-          message.id === streamingMessageIdRef.current
+          message.id === messageId
             ? {
                 ...message,
                 status: event.error.code === 'chat.aborted' ? 'cancelled' : 'failed',
@@ -835,10 +838,11 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
+      const messageId = streamingMessageIdRef.current;
       setStatusText('正在调用飞书');
       setMessages((current) =>
         current.map((message) => {
-          if (message.id !== streamingMessageIdRef.current) {
+          if (message.id !== messageId) {
             return message;
           }
           const existingEvents = message.toolEvents ?? [];
@@ -870,10 +874,11 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
+      const messageId = streamingMessageIdRef.current;
       setStatusText(event.status === 'completed' ? '飞书调用完成' : '飞书调用失败');
       setMessages((current) =>
         current.map((message) => {
-          if (message.id !== streamingMessageIdRef.current) {
+          if (message.id !== messageId) {
             return message;
           }
           return {
@@ -898,10 +903,11 @@ export default function App() {
       if (event.requestId !== activeRequestIdRef.current) {
         return;
       }
+      const messageId = streamingMessageIdRef.current;
       setStatusText('等待确认');
       setMessages((current) =>
         current.map((message) => {
-          if (message.id !== streamingMessageIdRef.current) {
+          if (message.id !== messageId) {
             return message;
           }
           const existingEvents = message.toolEvents ?? [];
