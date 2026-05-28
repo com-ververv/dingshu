@@ -10,13 +10,14 @@ const TOOL_NAME = 'lark_cli_shortcut';
 const MAX_OUTPUT_PREVIEW_LENGTH = 6_000;
 
 const stringLikeValue = z.union([z.string(), z.number(), z.boolean()]);
+type ShortcutArgs = Record<string, string | number | boolean>;
 
 function normalizeFlagName(flag: string): string {
   return flag.replace(/^--/, '');
 }
 
 export function buildLarkShortcutFlagArgs(
-  args: Record<string, string | number | boolean>,
+  args: ShortcutArgs,
   allowedFlags: readonly string[]
 ): string[] {
   const allowed = new Set(allowedFlags.map(normalizeFlagName));
@@ -37,6 +38,131 @@ export function buildLarkShortcutFlagArgs(
   }
 
   return result;
+}
+
+function hasShortcutArgs(args: ShortcutArgs): boolean {
+  return Object.keys(args).length > 0;
+}
+
+function coerceShortcutArgs(value: unknown): ShortcutArgs | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const result: ShortcutArgs = {};
+  for (const [key, rawValue] of Object.entries(value)) {
+    if (typeof rawValue === 'string' || typeof rawValue === 'number' || typeof rawValue === 'boolean') {
+      result[key] = rawValue;
+    }
+  }
+
+  return hasShortcutArgs(result) ? result : undefined;
+}
+
+function findJsonObjectSnippets(text: string): string[] {
+  const snippets: string[] = [];
+
+  for (let start = 0; start < text.length; start += 1) {
+    if (text[start] !== '{') {
+      continue;
+    }
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let index = start; index < text.length; index += 1) {
+      const char = text[index];
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (char === '\\') {
+        escaped = true;
+        continue;
+      }
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) {
+        continue;
+      }
+      if (char === '{') {
+        depth += 1;
+      } else if (char === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          snippets.push(text.slice(start, index + 1));
+          break;
+        }
+      }
+    }
+  }
+
+  return snippets;
+}
+
+function maybeUnescapeJsonText(text: string): string {
+  return text.replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+}
+
+function parseArgsFromJsonSnippet(snippet: string, capabilityId: string): ShortcutArgs | undefined {
+  try {
+    const parsed = JSON.parse(snippet) as { args?: unknown; capability?: unknown };
+    const parsedCapability = typeof parsed.capability === 'string' ? parsed.capability : undefined;
+    if (parsedCapability && parsedCapability !== capabilityId) {
+      return undefined;
+    }
+    return coerceShortcutArgs(parsed.args);
+  } catch {
+    return undefined;
+  }
+}
+
+function extractArgsObjectAfterLabel(text: string): ShortcutArgs | undefined {
+  const labelMatch = /(?:^|[\s,{])args\s*[:=]\s*\{/i.exec(text);
+  if (!labelMatch) {
+    return undefined;
+  }
+
+  const objectStart = labelMatch.index + labelMatch[0].lastIndexOf('{');
+  const [snippet] = findJsonObjectSnippets(text.slice(objectStart));
+  if (!snippet) {
+    return undefined;
+  }
+
+  try {
+    return coerceShortcutArgs(JSON.parse(snippet));
+  } catch {
+    return undefined;
+  }
+}
+
+export function normalizeLarkShortcutArgs(
+  args: ShortcutArgs,
+  capabilityId: string,
+  reason?: string
+): { args: ShortcutArgs; recoveredFromReason: boolean } {
+  if (hasShortcutArgs(args) || !reason) {
+    return { args, recoveredFromReason: false };
+  }
+
+  const candidates = Array.from(new Set([reason, maybeUnescapeJsonText(reason)]));
+  for (const candidate of candidates) {
+    for (const snippet of findJsonObjectSnippets(candidate)) {
+      const recoveredArgs = parseArgsFromJsonSnippet(snippet, capabilityId);
+      if (recoveredArgs) {
+        return { args: recoveredArgs, recoveredFromReason: true };
+      }
+    }
+
+    const recoveredArgs = extractArgsObjectAfterLabel(candidate);
+    if (recoveredArgs) {
+      return { args: recoveredArgs, recoveredFromReason: true };
+    }
+  }
+
+  return { args, recoveredFromReason: false };
 }
 
 function parseOutput(stdout: string): unknown {
@@ -63,8 +189,10 @@ export function createLarkCliShortcutTool(requestId: string, emitToolEvent: Chat
     inputSchema: z.object({
       args: z
         .record(z.string(), stringLikeValue)
-        .optional()
-        .describe('传给 shortcut 的参数对象，key 使用 flag 名称，不带或可带 --；value 为字符串、数字或布尔值。'),
+        .default({})
+        .describe(
+          '传给 shortcut 的结构化参数对象，必须作为 args 字段传入，不能写进 reason。key 使用 flag 名称，不带或可带 --；value 为字符串、数字或布尔值。例如 {"chat-id":"oc_xxx","page-size":20}。'
+        ),
       capability: z.string().describe('能力 ID，例如 calendar_agenda、task_get_my_tasks、sheets_read。'),
       reason: z.string().optional().describe('为什么需要调用这个飞书能力，用于审批和工具过程展示。'),
     }),
@@ -92,8 +220,9 @@ export function createLarkCliShortcutTool(requestId: string, emitToolEvent: Chat
       }
 
       let shortcutArgs: string[];
+      const normalized = normalizeLarkShortcutArgs(args, capabilityId, reason);
       try {
-        shortcutArgs = buildLarkShortcutFlagArgs(args, capability.allowedFlags);
+        shortcutArgs = buildLarkShortcutFlagArgs(normalized.args, capability.allowedFlags);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         const output = {
@@ -125,9 +254,11 @@ export function createLarkCliShortcutTool(requestId: string, emitToolEvent: Chat
         commandArgs.push('--format', 'json');
       }
       const input = {
+        args: normalized.args,
         capability: capability.id,
         command: `lark-cli ${commandArgs.join(' ')}`,
         description: capability.description,
+        recoveredArgsFromReason: normalized.recoveredFromReason || undefined,
         reason,
         risk: capability.risk,
       };

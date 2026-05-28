@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLarkShortcutFlagArgs } from './larkCliShortcut';
+import { buildLarkShortcutFlagArgs, normalizeLarkShortcutArgs } from './larkCliShortcut';
 import { getLarkCapability } from '../../lark/capabilities';
 
 describe('lark_cli_shortcut', () => {
@@ -10,6 +10,44 @@ describe('lark_cli_shortcut', () => {
       '--page-size',
       '3',
     ]);
+  });
+
+  it('recovers shortcut args when the model places JSON in reason', () => {
+    const normalized = normalizeLarkShortcutArgs(
+      {},
+      'im_chat_messages_list',
+      '查看群消息。最终调用：{"capability":"im_chat_messages_list","args":{"chat-id":"oc_3de1e37bfc274d931e01c46a8202dc36","page-size":20},"reason":"查看指定群聊最近2小时消息。"}'
+    );
+
+    expect(normalized).toEqual({
+      args: {
+        'chat-id': 'oc_3de1e37bfc274d931e01c46a8202dc36',
+        'page-size': 20,
+      },
+      recoveredFromReason: true,
+    });
+    expect(buildLarkShortcutFlagArgs(normalized.args, ['chat-id', 'page-size'])).toEqual([
+      '--chat-id',
+      'oc_3de1e37bfc274d931e01c46a8202dc36',
+      '--page-size',
+      '20',
+    ]);
+  });
+
+  it('recovers escaped args JSON from verbose reasoning text', () => {
+    const normalized = normalizeLarkShortcutArgs(
+      {},
+      'im_chat_messages_list',
+      '不要重复。让我确保 JSON 格式完美：{ \\"capability\\": \\"im_chat_messages_list\\", \\"args\\": { \\"chat-id\\": \\"oc_xxx\\", \\"page-size\\": 20 }, \\"reason\\": \\"查看指定群聊最近2小时消息\\" }'
+    );
+
+    expect(normalized).toEqual({
+      args: {
+        'chat-id': 'oc_xxx',
+        'page-size': 20,
+      },
+      recoveredFromReason: true,
+    });
   });
 
   it('keeps boolean true flags and skips false flags', () => {
