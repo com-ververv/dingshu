@@ -111,6 +111,7 @@ const createWindow = (): void => {
     },
     titleBarStyle: 'hiddenInset',
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1a1a1a' : '#ffffff',
+    show: true,
   });
 
   // Restore maximized state if applicable
@@ -156,6 +157,20 @@ const createWindow = (): void => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+
+  mainWindow.webContents.once('did-finish-load', () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error('[App] Main window did-fail-load:', { errorCode, errorDescription, validatedURL });
+  });
 
   // Open DevTools in development
   if (process.env.NODE_ENV === 'development') {

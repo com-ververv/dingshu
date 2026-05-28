@@ -232,6 +232,29 @@ function getString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
+function normalizeLoadedMessage(message: ChatMessage): ChatMessage {
+  const status = message.role === 'assistant' && message.status === 'streaming' ? 'failed' : message.status;
+  const error =
+    message.role === 'assistant' && message.status === 'streaming'
+      ? message.error ?? '上次生成已中断，请重新发送。'
+      : message.error;
+
+  return {
+    ...message,
+    status,
+    error,
+    toolEvents: message.toolEvents?.map((event) =>
+      event.status === 'pending_confirmation' || event.status === 'running'
+        ? {
+            ...event,
+            status: 'cancelled',
+            errorMessage: event.errorMessage ?? '上次会话已中断，请重新发起。',
+          }
+        : event
+    ),
+  };
+}
+
 function deriveArtifacts(messages: ChatMessage[]): Artifact[] {
   const artifacts = new Map<string, Artifact>();
   for (const message of messages) {
@@ -626,7 +649,7 @@ export default function App() {
         status: message.status,
         error: message.error,
         toolEvents: message.toolEvents,
-      }))
+      })).map(normalizeLoadedMessage)
     );
     setStatusText('Ready');
   }
@@ -741,7 +764,7 @@ export default function App() {
               status: message.status,
               error: message.error,
               toolEvents: message.toolEvents,
-            }))
+            })).map(normalizeLoadedMessage)
           );
         });
       }
