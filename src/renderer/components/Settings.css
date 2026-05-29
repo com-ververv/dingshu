@@ -884,3 +884,93 @@
     max-width: 680px;
   }
 }
+
+/* Codex desktop parity pass: settings field geometry */
+.settings-content {
+  padding-top: 72px;
+  padding-left: 98px;
+}
+
+.settings-section {
+  max-width: 650px;
+}
+
+.settings-section h3 {
+  margin-bottom: 22px;
+  color: #202428;
+  font-size: 27px;
+  font-weight: 650;
+  line-height: 1.16;
+}
+
+.section-description {
+  max-width: 650px;
+  margin-bottom: 14px;
+  color: #777f85;
+  font-size: 13px;
+}
+
+.db-status,
+.credential-row,
+.settings-section > input,
+.credential-grid > input {
+  max-width: 650px;
+  min-height: 38px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.db-status {
+  padding: 8px 12px;
+}
+
+.credential-row {
+  padding: 8px 12px;
+}
+
+.settings-section > input,
+.credential-grid > input {
+  padding: 0 12px;
+}
+
+.db-status.success,
+.test-result.success {
+  color: #6f8b78;
+  background: #f7fbf8;
+  border-color: #e7f0ea;
+}
+
+.configured {
+  color: #7ba386;
+}
+
+.settings-action {
+  min-width: 32px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+}
+
+.settings-action:disabled {
+  color: #ffffff;
+  background: #868c91;
+  border-color: #868c91;
+}
+
+@media (max-width: 1500px) {
+  .settings-content {
+    padding-top: 70px;
+    padding-left: 92px;
+  }
+
+  .settings-section,
+  .section-description,
+  .db-status,
+  .credential-row,
+  .settings-section > input,
+  .credential-grid > input,
+  .migration-section,
+  .auth-section {
+    max-width: 650px;
+  }
+}
