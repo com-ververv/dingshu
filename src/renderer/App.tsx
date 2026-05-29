@@ -1497,10 +1497,10 @@ export default function App() {
               type="button"
               onClick={startNewConversation}
               disabled={isStreaming}
-              aria-label="新建会话"
+              aria-label="New chat"
               data-testid="new-conversation-button"
             >
-              新建
+              New
             </button>
           </div>
           <div className="sidebar-search">
@@ -1509,8 +1509,8 @@ export default function App() {
               ref={conversationSearchRef}
               value={conversationSearch}
               onChange={(event) => setConversationSearch(event.target.value)}
-              placeholder="搜索会话"
-              aria-label="搜索会话"
+              placeholder="Search chats"
+              aria-label="Search chats"
             />
           </div>
           <div className="sidebar-status-panel">
