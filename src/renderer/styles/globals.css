@@ -3665,6 +3665,27 @@ body {
   display: none;
 }
 
+/* Codex desktop parity pass: header fine tuning */
+.app-header {
+  min-height: 44px;
+  padding-right: 15px;
+  padding-left: 16px;
+  border-bottom-color: #eef1f2;
+}
+
+.app-title {
+  font-size: 13.5px;
+  font-weight: 620;
+}
+
+.header-right {
+  gap: 8px;
+}
+
+.header-tool-group {
+  gap: 5px;
+}
+
 /* Codex desktop parity pass: expanded tool card */
 .tool-event[open] {
   width: min(100%, 880px);
