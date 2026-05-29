@@ -2328,6 +2328,40 @@ body {
   font-size: 13px;
 }
 
+/* Codex desktop parity pass: markdown table density */
+.chat-message.is-assistant .markdown-content table {
+  margin: 0.65rem 0 0.85rem;
+  border-color: #e2e6e8;
+  border-radius: 10px;
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.018);
+}
+
+.chat-message.is-assistant .markdown-content th,
+.chat-message.is-assistant .markdown-content td {
+  padding: 7px 10px;
+  color: #3e454a;
+  border-color: #e2e6e8;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.chat-message.is-assistant .markdown-content th {
+  color: #2f3539;
+  background: #f3f4f4;
+  font-weight: 560;
+}
+
+.chat-message.is-assistant .markdown-content ul,
+.chat-message.is-assistant .markdown-content ol {
+  margin: 0.45rem 0 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.chat-message.is-assistant .markdown-content li {
+  margin: 0.22rem 0;
+  padding-left: 0.1rem;
+}
+
 .chat-empty {
   width: min(640px, calc(100% - 72px));
   padding-bottom: 170px;
