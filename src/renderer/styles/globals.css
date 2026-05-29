@@ -3971,7 +3971,7 @@ body {
   }
 
   .message-list {
-    width: min(820px, calc(100% - 72px));
+    width: min(760px, calc(100% - 72px));
     padding-bottom: 360px;
   }
 
