@@ -840,3 +840,47 @@
     max-width: 610px;
   }
 }
+
+/* Codex desktop parity pass: final settings refinement */
+.settings-content {
+  padding-left: 92px;
+}
+
+.settings-section,
+.section-description,
+.db-status,
+.credential-row,
+.settings-section > input,
+.credential-grid > input,
+.migration-section,
+.auth-section {
+  max-width: 680px;
+}
+
+.db-status.success,
+.test-result.success {
+  color: #4f8f68;
+  background: #f3faf5;
+  border-color: #dcefe2;
+}
+
+.configured {
+  color: #58a66f;
+}
+
+@media (max-width: 1500px) {
+  .settings-content {
+    padding-left: 92px;
+  }
+
+  .settings-section,
+  .section-description,
+  .db-status,
+  .credential-row,
+  .settings-section > input,
+  .credential-grid > input,
+  .migration-section,
+  .auth-section {
+    max-width: 680px;
+  }
+}
