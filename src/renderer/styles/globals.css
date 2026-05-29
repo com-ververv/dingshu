@@ -4883,6 +4883,14 @@ body {
   box-shadow: none;
 }
 
+body:has(.chat-shell.is-empty) .app-header {
+  min-height: 40px;
+}
+
+body:has(.chat-shell.is-empty) .sidebar-window-spacer {
+  height: 43px;
+}
+
 @media (max-width: 1500px) {
   .chat-thread:has(.chat-empty) .chat-empty {
     width: min(760px, calc(100% - 92px));
