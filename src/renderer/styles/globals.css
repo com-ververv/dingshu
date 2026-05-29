@@ -4781,6 +4781,7 @@ body {
   margin-top: -38px;
   padding: 6px 20px 0;
   padding-right: 72px;
+  gap: 14px;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -4825,6 +4826,17 @@ body {
 
 .chat-shell.is-empty .composer-model {
   margin-left: auto;
+  margin-right: 2px;
+  padding: 0;
+  color: #777d82;
+  background: transparent;
+  border-radius: 0;
+  font-weight: 520;
+}
+
+.chat-shell.is-empty .composer-model + span {
+  margin-left: 0;
+  color: #777d82;
 }
 
 .chat-shell.is-empty .composer-model + span + span {
