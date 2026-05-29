@@ -4816,26 +4816,52 @@ body {
 @media (max-width: 1500px) {
   .chat-thread:has(.chat-empty) .chat-empty {
     width: min(760px, calc(100% - 92px));
-    padding-top: min(23vh, 196px);
+    padding-top: min(30vh, 256px);
   }
 
   .chat-empty h2 {
-    font-size: 20px;
-    font-weight: 610;
+    font-size: 28px;
+    font-weight: 440;
   }
 
   .chat-shell.is-empty .chat-composer {
-    width: min(730px, calc(100% - 84px));
-    padding-bottom: 20px;
+    width: min(980px, calc(100% - 120px));
+    padding-bottom: min(34vh, 286px);
   }
 
   .chat-shell.is-empty .composer-actions {
-    bottom: 68px;
+    bottom: calc(min(34vh, 286px) + 46px);
   }
 
   .chat-shell.is-empty .composer-environment-row {
-    gap: 22px;
-    min-height: 38px;
-    font-size: 13px;
+    gap: 28px;
+    min-height: 42px;
+    font-size: 14px;
+  }
+}
+
+/* Codex desktop parity pass: new chat empty-state placement */
+@media (max-width: 1600px) {
+  .chat-thread:has(.chat-empty) .chat-empty {
+    padding-top: min(37vh, 316px);
+  }
+
+  .chat-shell.is-empty .chat-composer {
+    width: min(976px, calc(100% - 112px));
+    padding-bottom: min(39vh, 334px);
+  }
+
+  .chat-shell.is-empty .composer-actions {
+    bottom: calc(min(39vh, 334px) + 44px);
+  }
+
+  .chat-shell.is-empty .composer-input-wrap,
+  .chat-shell.is-empty .chat-composer textarea {
+    min-height: 92px;
+  }
+
+  .chat-shell.is-empty .composer-status-row {
+    min-height: 37px;
+    margin-top: -37px;
   }
 }
