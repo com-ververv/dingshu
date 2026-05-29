@@ -1981,7 +1981,9 @@ body {
 
 /* Codex desktop parity pass: geometry and density refinement */
 .chat-shell {
-  grid-template-columns: var(--codex-sidebar-width) minmax(0, 1fr) var(--codex-right-card-width);
+  grid-template-columns: var(--codex-sidebar-width) minmax(0, 1fr) var(
+      --codex-right-card-width
+    );
   background: #fff;
 }
 
@@ -2363,7 +2365,9 @@ body {
 }
 
 .chat-shell {
-  grid-template-columns: var(--codex-sidebar-width) minmax(0, 1fr) var(--codex-right-card-width);
+  grid-template-columns: var(--codex-sidebar-width) minmax(0, 1fr) var(
+      --codex-right-card-width
+    );
   background: var(--codex-page-bg);
 }
 
@@ -4413,4 +4417,90 @@ body {
   color: #596167;
   background: #f1f3f4;
   box-shadow: none;
+}
+
+/* Codex desktop parity pass: tighten composer and right rail geometry */
+.chat-composer {
+  width: min(920px, calc(100% - 72px));
+  padding-bottom: 20px;
+}
+
+.composer-input-wrap,
+.chat-composer textarea {
+  min-height: 104px;
+}
+
+.composer-input-wrap {
+  border-color: #e3e7e9;
+  border-radius: 23px;
+  box-shadow:
+    0 9px 24px rgb(0 0 0 / 0.045),
+    0 1px 2px rgb(0 0 0 / 0.03);
+}
+
+.chat-composer textarea {
+  padding: 16px 112px 40px 20px;
+  border-radius: 23px;
+}
+
+.composer-actions {
+  right: 9px;
+  bottom: 32px;
+}
+
+.composer-status-row {
+  min-height: 34px;
+  margin-top: -35px;
+  padding: 6px 20px 0;
+  padding-right: 122px;
+}
+
+.artifact-panel {
+  padding-top: 66px;
+  padding-right: 18px;
+}
+
+.codex-side-card {
+  width: 306px;
+  border-radius: 20px;
+  box-shadow:
+    0 9px 22px rgb(0 0 0 / 0.04),
+    0 1px 2px rgb(0 0 0 / 0.025);
+}
+
+@media (max-width: 1500px) {
+  .chat-composer {
+    width: min(730px, calc(100% - 84px));
+    padding-bottom: 20px;
+  }
+
+  .composer-input-wrap,
+  .chat-composer textarea {
+    min-height: 86px;
+  }
+
+  .chat-composer textarea {
+    padding-top: 15px;
+    padding-bottom: 34px;
+  }
+
+  .composer-actions {
+    bottom: 30px;
+  }
+
+  .composer-status-row {
+    min-height: 31px;
+    margin-top: -31px;
+    padding-top: 5px;
+  }
+
+  .artifact-panel {
+    padding-top: 64px;
+    padding-right: 16px;
+  }
+
+  .codex-side-card {
+    width: 286px;
+    border-radius: 20px;
+  }
 }
