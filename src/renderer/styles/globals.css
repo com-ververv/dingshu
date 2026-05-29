@@ -3513,6 +3513,10 @@ body {
   background: #e9eeee;
 }
 
+.chat-shell.is-empty .sidebar-primary-nav button:first-child {
+  background: #eef1f1;
+}
+
 /* Codex desktop parity pass: lighter header tools */
 .header-tools {
   gap: 8px;
