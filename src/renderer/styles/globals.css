@@ -3686,6 +3686,44 @@ body {
   gap: 5px;
 }
 
+/* Codex desktop parity pass: subtle configuration notice */
+.config-warning {
+  width: min(560px, calc(100% - 180px));
+  margin: 0 auto 16px;
+  padding: 8px 10px;
+  color: #6d5b31;
+  background: #fffdf8;
+  border-color: #ece4d0;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.025);
+}
+
+.config-warning div {
+  gap: 1px;
+}
+
+.config-warning strong {
+  color: #6d5b31;
+  font-size: 11.5px;
+  font-weight: 560;
+}
+
+.config-warning span {
+  color: #8f825f;
+  font-size: 11.5px;
+}
+
+.config-warning .primary-button {
+  min-height: 26px;
+  padding: 0 10px;
+  color: #f9fbff;
+  background: #3d83d8;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 560;
+  box-shadow: none;
+}
+
 /* Codex desktop parity pass: expanded tool card */
 .tool-event[open] {
   width: min(100%, 880px);
