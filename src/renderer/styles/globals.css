@@ -4875,6 +4875,14 @@ body {
   font-size: 12.5px !important;
 }
 
+.chat-shell.is-empty .sidebar-primary-nav button:first-child,
+.chat-shell.is-empty .sidebar-primary-nav button:first-child:hover,
+.chat-shell.is-empty .sidebar-primary-nav button:first-child:focus-visible {
+  color: #30363a;
+  background: #eef1f1;
+  box-shadow: none;
+}
+
 @media (max-width: 1500px) {
   .chat-thread:has(.chat-empty) .chat-empty {
     width: min(760px, calc(100% - 92px));
