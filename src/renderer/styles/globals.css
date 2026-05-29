@@ -4504,3 +4504,31 @@ body {
     border-radius: 20px;
   }
 }
+
+/* Codex desktop parity pass: empty state vertical alignment */
+.chat-shell.is-empty .chat-thread {
+  align-items: flex-start;
+}
+
+.chat-thread:has(.chat-empty) .chat-empty {
+  padding-top: min(22vh, 176px);
+  transform: none;
+}
+
+.chat-empty h2 {
+  margin-bottom: 0;
+  color: #202326;
+  font-size: 22px;
+  font-weight: 610;
+  line-height: 1.2;
+}
+
+@media (max-width: 1500px) {
+  .chat-thread:has(.chat-empty) .chat-empty {
+    padding-top: min(22vh, 168px);
+  }
+
+  .chat-empty h2 {
+    font-size: 20px;
+  }
+}
