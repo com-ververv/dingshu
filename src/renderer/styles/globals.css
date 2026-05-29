@@ -4568,15 +4568,25 @@ body {
   line-height: 1.35;
 }
 
+.tool-event-summary span {
+  padding: 0;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
 .tool-event {
   color: #92999e;
   border-radius: 10px;
 }
 
 .tool-event summary {
+  display: grid;
+  grid-template-columns: 16px minmax(140px, 1fr) max-content max-content;
   min-height: 28px;
   padding: 4px 8px 4px 0;
-  gap: 10px;
+  column-gap: 10px;
   color: #979ea3;
   border-radius: 10px;
   font-size: 13px;
@@ -4588,24 +4598,31 @@ body {
 }
 
 .tool-event summary > span:nth-child(2) {
-  flex: 0 1 144px;
+  min-width: 0;
+  overflow: hidden;
   color: #91989d;
   font-weight: 450;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tool-event-status {
-  margin-left: 4px;
+  margin-left: 0;
   color: #a0a6ab;
+  white-space: nowrap;
 }
 
 .tool-event-elapsed {
   min-width: 42px;
   color: #a0a6ab;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .tool-event-icon {
   width: 14px;
   color: #80bd91;
+  justify-content: center;
 }
 
 .tool-event.is-failed .tool-event-icon,
@@ -4645,7 +4662,6 @@ body {
 }
 
 .tool-event[open] summary > span:nth-child(2) {
-  flex-basis: auto;
   color: #3f464b;
   font-weight: 520;
 }
