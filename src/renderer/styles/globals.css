@@ -4707,7 +4707,7 @@ body {
 
 .chat-empty h2 {
   color: #202326;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 440;
   line-height: 1.2;
 }
@@ -4832,7 +4832,7 @@ body {
   }
 
   .chat-empty h2 {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 440;
   }
 
@@ -4859,7 +4859,7 @@ body {
   }
 
   .chat-shell.is-empty .chat-composer {
-    width: min(976px, calc(100% - 112px));
+    width: min(940px, calc(100% - 136px));
     padding-bottom: min(39vh, 334px);
   }
 
