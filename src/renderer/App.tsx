@@ -1432,6 +1432,7 @@ export default function App() {
           <div className="header-tool-group" aria-label="Workspace tools">
             <button type="button" className="header-tool-button" aria-label="编辑器">
               <Monitor size={15} />
+              <span>VSCode</span>
             </button>
             <button type="button" className="header-tool-button" aria-label="信息">
               <Info size={15} />
