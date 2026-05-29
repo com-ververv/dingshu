@@ -15,6 +15,7 @@ import {
   ExternalLink,
   FileText,
   Folder,
+  FolderGit2,
   GitBranch,
   GitCommitHorizontal,
   Github,
@@ -1694,7 +1695,7 @@ export default function App() {
             onChange={(event) => handleInputChange(event.target.value, event.currentTarget.selectionStart)}
             onClick={(event) => setMentionQuery(findMentionQuery(input, event.currentTarget.selectionStart))}
             onKeyDown={handleKeyDown}
-            placeholder="输入消息，@ 选择飞书对象，Enter 发送"
+            placeholder={messages.length === 0 ? 'Do anything' : '输入消息，@ 选择飞书对象，Enter 发送'}
             aria-label="消息输入框"
             data-testid="chat-input"
             rows={1}
@@ -1737,6 +1738,13 @@ export default function App() {
             <span>5.5</span>
             <span>High</span>
           </div>
+          {messages.length === 0 ? (
+            <div className="composer-environment-row" aria-hidden="true">
+              <span><FolderGit2 size={16} />desktop-starter-app</span>
+              <span><Laptop size={16} />Work locally</span>
+              <span><GitBranch size={16} />codex/siliconflow-ai-sdk...</span>
+            </div>
+          ) : null}
         </form>
 
         <ArtifactPanel
