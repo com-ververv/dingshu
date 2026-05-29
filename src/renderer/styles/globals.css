@@ -4532,3 +4532,143 @@ body {
     font-size: 20px;
   }
 }
+
+/* Codex desktop parity pass: tool trace card polish */
+.tool-event-list {
+  width: min(100%, 720px);
+  gap: 2px;
+  margin-top: 5px;
+  margin-bottom: 14px;
+}
+
+.tool-event-summary {
+  min-height: 20px;
+  margin-bottom: 4px;
+  padding-left: 0;
+  color: #979ea3;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.tool-event {
+  color: #92999e;
+  border-radius: 10px;
+}
+
+.tool-event summary {
+  min-height: 28px;
+  padding: 4px 8px 4px 0;
+  gap: 10px;
+  color: #979ea3;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.tool-event summary:hover {
+  background: #f7f8f8;
+}
+
+.tool-event summary > span:nth-child(2) {
+  flex: 0 1 144px;
+  color: #91989d;
+  font-weight: 450;
+}
+
+.tool-event-status {
+  margin-left: 4px;
+  color: #a0a6ab;
+}
+
+.tool-event-elapsed {
+  min-width: 42px;
+  color: #a0a6ab;
+}
+
+.tool-event-icon {
+  width: 14px;
+  color: #80bd91;
+}
+
+.tool-event.is-failed .tool-event-icon,
+.tool-event.is-cancelled .tool-event-icon {
+  color: #db8d8a;
+}
+
+.tool-event-icon svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2.1;
+}
+
+.tool-event[open] {
+  width: min(100%, 720px);
+  margin: 8px 0 14px;
+  padding: 0;
+  overflow: hidden;
+  background: #fbfbfb;
+  border: 1px solid #e5e9eb;
+  border-radius: 12px;
+}
+
+.tool-event[open] summary {
+  min-height: 40px;
+  padding: 9px 12px;
+  color: #3f464b;
+  background: #fff;
+  border-bottom: 1px solid #edf0f1;
+  border-radius: 12px 12px 0 0;
+  font-size: 14px;
+  font-weight: 520;
+}
+
+.tool-event[open] summary:hover {
+  background: #fff;
+}
+
+.tool-event[open] summary > span:nth-child(2) {
+  flex-basis: auto;
+  color: #3f464b;
+  font-weight: 520;
+}
+
+.tool-event[open] .tool-event-status,
+.tool-event[open] .tool-event-elapsed {
+  color: #858d92;
+  font-size: 12.5px;
+  font-weight: 450;
+}
+
+.tool-event[open] .tool-event-detail {
+  gap: 7px;
+  padding: 10px 12px 12px;
+  color: #7d858a;
+  background: #fbfbfb;
+  font-size: 12.5px;
+  font-weight: 450;
+}
+
+.tool-event-detail p {
+  color: #7d858a;
+  line-height: 1.45;
+}
+
+.tool-event[open] .tool-event-detail pre {
+  max-height: 178px;
+  margin: 0;
+  padding: 11px 12px;
+  color: #505860;
+  background: #fff;
+  border: 1px solid #e7ebed;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1500px) {
+  .tool-event-list,
+  .tool-event[open] {
+    width: min(100%, 650px);
+  }
+}
