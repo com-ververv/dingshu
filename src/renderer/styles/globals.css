@@ -3357,14 +3357,14 @@ body {
 }
 
 .tool-event-status {
-  margin-left: auto;
+  margin-left: 10px;
   color: #9aa1a6;
 }
 
 .tool-event-elapsed {
-  min-width: 42px;
+  min-width: 34px;
   color: #9aa1a6;
-  text-align: right;
+  text-align: left;
 }
 
 .tool-event-icon {
