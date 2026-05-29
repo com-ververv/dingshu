@@ -4319,3 +4319,60 @@ body {
     margin-bottom: 34px;
   }
 }
+
+/* Codex desktop parity pass: final table and right rail polish */
+.chat-message.is-assistant .markdown-content table {
+  width: auto;
+  max-width: min(100%, 470px);
+  margin: 10px 0 12px;
+  border-color: #e8ecee;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.chat-message.is-assistant .markdown-content th,
+.chat-message.is-assistant .markdown-content td {
+  padding: 7px 12px;
+  border-color: #e8ecee;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.chat-message.is-assistant .markdown-content th {
+  background: #f6f7f7;
+  font-weight: 560;
+}
+
+.chat-message.is-assistant .markdown-content td {
+  background: #fff;
+}
+
+.artifact-panel {
+  padding-top: 70px;
+}
+
+.codex-side-card {
+  border-radius: 18px;
+  box-shadow:
+    0 10px 24px rgb(0 0 0 / 0.045),
+    0 1px 2px rgb(0 0 0 / 0.025);
+}
+
+@media (max-width: 1500px) {
+  .artifact-panel {
+    padding-top: 68px;
+  }
+
+  .codex-side-card {
+    border-radius: 18px;
+  }
+
+  .chat-composer {
+    padding-bottom: 24px;
+  }
+
+  .composer-input-wrap,
+  .chat-composer textarea {
+    min-height: 92px;
+  }
+}
