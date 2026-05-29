@@ -4843,6 +4843,38 @@ body {
   color: #777d82;
 }
 
+.chat-shell.is-empty .conversation-item.is-active {
+  background: transparent;
+}
+
+.chat-shell.is-empty .conversation-item.is-active > button:first-child {
+  min-height: 40px;
+  padding: 4px 74px 4px 10px !important;
+  background: transparent;
+}
+
+.chat-shell.is-empty .conversation-item.is-active .conversation-preview {
+  display: block;
+  color: #98a0a5;
+}
+
+.chat-shell.is-empty .conversation-item.is-active .conversation-title {
+  color: #4a5055;
+  font-weight: 520;
+}
+
+.chat-shell.is-empty .conversation-item.is-active .conversation-time {
+  top: 6px;
+  right: 10px;
+  width: 64px !important;
+  height: auto;
+  overflow: visible;
+  color: #a3a9ad !important;
+  border: 0;
+  border-radius: 0;
+  font-size: 12.5px !important;
+}
+
 @media (max-width: 1500px) {
   .chat-thread:has(.chat-empty) .chat-empty {
     width: min(760px, calc(100% - 92px));
