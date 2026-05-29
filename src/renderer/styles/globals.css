@@ -4757,13 +4757,13 @@ body {
 }
 
 .chat-shell.is-empty .composer-actions .primary-button {
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
   color: #fff;
-  background: #8c8f92;
-  border-color: #8c8f92;
+  background: #9a9da0;
+  border-color: #9a9da0;
   border-radius: 999px;
   box-shadow: none;
 }
