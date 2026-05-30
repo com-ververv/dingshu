@@ -4745,6 +4745,7 @@ body {
 }
 
 .chat-shell.is-empty .composer-input-wrap {
+  grid-row: auto;
   border-color: #dfe3e5;
   border-bottom-color: #edf0f1;
   border-radius: 21px 21px 0 0;
@@ -4767,6 +4768,7 @@ body {
 .chat-shell.is-empty .composer-actions {
   right: 10px;
   bottom: calc(min(29vh, 306px) + 46px);
+  z-index: 5;
 }
 
 .chat-shell.is-empty .composer-actions .secondary-button {
@@ -4794,15 +4796,25 @@ body {
 }
 
 .chat-shell.is-empty .composer-status-row {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: 1;
+  box-sizing: border-box;
+  grid-column: 1;
   min-height: 38px;
   margin-top: 0;
   padding: 0 20px 4px;
-  padding-right: 72px;
+  padding-right: 118px;
   gap: 14px;
   background: #fff;
   border-right: 1px solid #dfe3e5;
   border-left: 1px solid #dfe3e5;
   border-radius: 0;
+  box-shadow:
+    0 8px 24px rgb(0 0 0 / 0.055),
+    0 1px 2px rgb(0 0 0 / 0.035);
 }
 
 .composer-environment-row {
